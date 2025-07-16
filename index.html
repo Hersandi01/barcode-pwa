@@ -1,78 +1,83 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>ZXing Barcode Scanner</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script type="module">
-    import { BrowserMultiFormatReader, Html5QrcodeScanType } from 'https://unpkg.com/@zxing/browser@latest';
+  <head>
+    <meta charset="utf-8" />
+    <title>ZXing Barcode Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script type="module">
+      import {
+        BrowserMultiFormatReader
+      } from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest";
 
-    const codeReader = new BrowserMultiFormatReader();
-    const videoElement = document.getElementById('video');
-    const barcodeInput = document.getElementById('barcode');
-    const statusText = document.getElementById('status');
+      const codeReader = new BrowserMultiFormatReader();
 
-    async function startScanner() {
-      try {
-        const devices = await codeReader.listVideoInputDevices();
-        const selectedDeviceId = devices[0].deviceId;
+      window.onload = async () => {
+        const video = document.getElementById("video");
+        const barcodeInput = document.getElementById("barcode");
+        const status = document.getElementById("status");
 
-        codeReader.decodeFromVideoDevice(selectedDeviceId, videoElement, (result, err) => {
-          if (result) {
-            barcodeInput.value = result.text;
-            statusText.innerText = '✅ Barcode terbaca: ' + result.text;
-            codeReader.reset(); // stop scanner setelah terbaca
-          }
-        });
-      } catch (err) {
-        statusText.innerText = '❌ Gagal mengakses kamera: ' + err;
-      }
-    }
+        try {
+          const devices = await codeReader.listVideoInputDevices();
+          const selectedDeviceId = devices[0].deviceId;
 
-    window.onload = startScanner;
-  </script>
-</head>
-<body>
-  <h3>Scan Barcode GS1-128</h3>
-  <video id="video" width="300" height="200" style="border:1px solid black;"></video>
-
-  <form id="data-form">
-    <p><label>Barcode: <input type="text" id="barcode" name="barcode" readonly></label></p>
-    <p><label>Nama: <input type="text" id="nama" required></label></p>
-    <p><label>Berat: <input type="number" id="berat" required></label></p>
-    <p><label>Issue: <input type="text" id="issue" required></label></p>
-    <p><label>NCM: <input type="text" id="ncm" required></label></p>
-    <button type="submit">Kirim</button>
-  </form>
-
-  <p id="status"></p>
-
-  <script>
-    const webhookURL = "https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec";
-
-    document.getElementById("data-form").addEventListener("submit", function(e) {
-      e.preventDefault();
-
-      const data = {
-        barcode: document.getElementById("barcode").value,
-        nama: document.getElementById("nama").value,
-        berat: document.getElementById("berat").value,
-        issue: document.getElementById("issue").value,
-        ncm: document.getElementById("ncm").value,
+          codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result, err) => {
+            if (result) {
+              barcodeInput.value = result.text;
+              status.innerText = "✅ Barcode terbaca: " + result.text;
+              codeReader.reset(); // Stop scanner
+            }
+          });
+        } catch (e) {
+          status.innerText = "❌ Gagal akses kamera: " + e;
+        }
       };
+    </script>
+  </head>
+  <body>
+    <h3>Scan Barcode GS1-128</h3>
+    <video id="video" width="300" height="200" style="border:1px solid black;"></video>
 
-      fetch(webhookURL, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" }
-      }).then(res => {
-        document.getElementById("status").innerText = "✅ Data berhasil dikirim!";
-        document.getElementById("data-form").reset();
-        document.getElementById("barcode").value = "";
-        startScanner(); // restart scanner
-      }).catch(err => {
-        document.getElementById("status").innerText = "❌ Gagal kirim data.";
+    <form id="data-form">
+      <p><label>Barcode: <input type="text" id="barcode" readonly /></label></p>
+      <p><label>Nama: <input type="text" id="nama" required /></label></p>
+      <p><label>Berat: <input type="number" id="berat" required /></label></p>
+      <p><label>Issue: <input type="text" id="issue" required /></label></p>
+      <p><label>NCM: <input type="text" id="ncm" required /></label></p>
+      <button type="submit">Kirim</button>
+    </form>
+
+    <p id="status"></p>
+
+    <script>
+      const webhookURL =
+        "https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec";
+
+      document.getElementById("data-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const data = {
+          barcode: document.getElementById("barcode").value,
+          nama: document.getElementById("nama").value,
+          berat: document.getElementById("berat").value,
+          issue: document.getElementById("issue").value,
+          ncm: document.getElementById("ncm").value
+        };
+
+        fetch(webhookURL, {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then((res) => {
+            document.getElementById("status").innerText = "✅ Data berhasil dikirim!";
+            document.getElementById("data-form").reset();
+          })
+          .catch((err) => {
+            document.getElementById("status").innerText = "❌ Gagal kirim data.";
+          });
       });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
