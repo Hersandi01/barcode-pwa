@@ -1,33 +1,95 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8" />
-    <title>Test Kamera</title>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <meta charset="utf-8" />
+    <title>Scan Barcode GS1-128</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: Arial, sans-serif; padding: 10px; }
+      video { border: 1px solid black; width: 100%; max-width: 400px; }
+      input, button { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; }
+      label { font-weight: bold; }
+    </style>
   </head>
   <body>
-    <h3>Coba Kamera</h3>
-    <video id="preview" width="300" height="200" style="border:1px solid black;"></video>
-    <p id="hasil"></p>
+    <h2>Scan Barcode GS1-128</h2>
+    <video id="video" autoplay></video>
 
+    <form id="data-form">
+      <label>Barcode:</label>
+      <input type="text" id="barcode" name="barcode" readonly />
+
+      <label>Nama:</label>
+      <input type="text" id="nama" name="nama" required />
+
+      <label>Berat:</label>
+      <input type="number" id="berat" name="berat" required />
+
+      <label>Issue:</label>
+      <input type="text" id="issue" name="issue" required />
+
+      <label>NCM:</label>
+      <input type="text" id="ncm" name="ncm" required />
+
+      <button type="submit">Kirim</button>
+    </form>
+
+    <p id="status"></p>
+
+    <!-- Barcode Scanner -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script>
       const codeReader = new ZXing.BrowserMultiFormatReader();
-      const video = document.getElementById("preview");
+      const videoElement = document.getElementById("video");
 
       codeReader
         .listVideoInputDevices()
-        .then((videoInputDevices) => {
-          const deviceId = videoInputDevices[0].deviceId;
-          codeReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-            if (result) {
-              document.getElementById("hasil").innerText = "✅ Barcode: " + result.text;
-              codeReader.reset();
-            }
-          });
+        .then((devices) => {
+          if (devices.length > 0) {
+            codeReader.decodeFromVideoDevice(devices[0].deviceId, videoElement, (result, err) => {
+              if (result) {
+                document.getElementById("barcode").value = result.text;
+                document.getElementById("status").innerText = "✅ Barcode terbaca: " + result.text;
+              }
+            });
+          } else {
+            document.getElementById("status").innerText = "❌ Tidak ada kamera ditemukan.";
+          }
         })
         .catch((err) => {
-          document.getElementById("hasil").innerText = "❌ Kamera error: " + err;
+          document.getElementById("status").innerText = "❌ Gagal akses kamera: " + err;
         });
+    </script>
+
+    <!-- Submit ke Google Sheets -->
+    <script>
+      const webhookURL = "https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec";
+
+      document.getElementById("data-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const data = {
+          barcode: document.getElementById("barcode").value,
+          nama: document.getElementById("nama").value,
+          berat: document.getElementById("berat").value,
+          issue: document.getElementById("issue").value,
+          ncm: document.getElementById("ncm").value,
+        };
+
+        fetch(webhookURL, {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then((res) => {
+            document.getElementById("status").innerText = "✅ Data berhasil dikirim!";
+            document.getElementById("data-form").reset();
+          })
+          .catch((err) => {
+            document.getElementById("status").innerText = "❌ Gagal kirim data.";
+          });
+      });
     </script>
   </body>
 </html>
