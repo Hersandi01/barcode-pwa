@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>ZXing Barcode Scanner (Non-Module)</title>
+    <title>Barcode Scanner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/@zxing/library@0.18.6"></script>
   </head>
   <body>
     <h3>Scan Barcode GS1-128</h3>
@@ -23,34 +23,30 @@
 
     <script>
       const codeReader = new ZXing.BrowserMultiFormatReader();
-      const barcodeInput = document.getElementById("barcode");
-      const statusText = document.getElementById("status");
+      const video = document.getElementById("video");
 
-      window.onload = () => {
-        ZXing.BrowserMultiFormatReader.listVideoInputDevices()
-          .then((videoInputDevices) => {
-            const selectedDeviceId = videoInputDevices[0].deviceId;
-
-            codeReader.decodeFromVideoDevice(selectedDeviceId, "video", (result, err) => {
-              if (result) {
-                barcodeInput.value = result.text;
-                statusText.innerText = "✅ Barcode terbaca: " + result.text;
-                codeReader.reset();
-              }
-            });
-          })
-          .catch((err) => {
-            statusText.innerText = "❌ Gagal akses kamera: " + err;
+      codeReader
+        .listVideoInputDevices()
+        .then((videoInputDevices) => {
+          return codeReader.decodeFromVideoDevice(videoInputDevices[0].deviceId, video, (result, err) => {
+            if (result) {
+              document.getElementById("barcode").value = result.text;
+              document.getElementById("status").innerText = "✅ Barcode terbaca: " + result.text;
+              codeReader.reset(); // stop scanning setelah dapat hasil
+            }
           });
-      };
+        })
+        .catch((err) => {
+          document.getElementById("status").innerText = "❌ Gagal akses kamera: " + err;
+        });
 
-      const webhookURL = "https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec";
+      const webhookURL =
+        "https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec";
 
       document.getElementById("data-form").addEventListener("submit", function (e) {
         e.preventDefault();
-
         const data = {
-          barcode: barcodeInput.value,
+          barcode: document.getElementById("barcode").value,
           nama: document.getElementById("nama").value,
           berat: document.getElementById("berat").value,
           issue: document.getElementById("issue").value,
@@ -60,14 +56,16 @@
         fetch(webhookURL, {
           method: "POST",
           body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
         })
-          .then(() => {
-            statusText.innerText = "✅ Data berhasil dikirim!";
+          .then((res) => {
+            document.getElementById("status").innerText = "✅ Data berhasil dikirim!";
             document.getElementById("data-form").reset();
           })
-          .catch(() => {
-            statusText.innerText = "❌ Gagal kirim data.";
+          .catch((err) => {
+            document.getElementById("status").innerText = "❌ Gagal kirim data.";
           });
       });
     </script>
