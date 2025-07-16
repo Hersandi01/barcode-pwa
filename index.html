@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Barcode Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <h3>Scan Barcode</h3>
+  <div id="reader" style="width:300px;"></div>
+
+  <form id="data-form">
+    <input type="hidden" id="barcode" name="barcode">
+    <p><label>Nama: <input type="text" id="nama" required></label></p>
+    <p><label>Berat: <input type="number" id="berat" required></label></p>
+    <p><label>Issue: <input type="text" id="issue" required></label></p>
+    <p><label>NCM: <input type="text" id="ncm" required></label></p>
+    <button type="submit">Kirim</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    const webhookURL = "https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"; // ganti
+
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById("barcode").value = decodedText;
+      document.getElementById("status").innerText = "✅ Barcode terbaca: " + decodedText;
+    }
+
+    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    scanner.render(onScanSuccess);
+
+    document.getElementById("data-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const data = {
+        barcode: document.getElementById("barcode").value,
+        nama: document.getElementById("nama").value,
+        berat: document.getElementById("berat").value,
+        issue: document.getElementById("issue").value,
+        ncm: document.getElementById("ncm").value,
+      };
+
+      fetch(webhookURL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      }).then(res => {
+        document.getElementById("status").innerText = "✅ Data berhasil dikirim!";
+        document.getElementById("data-form").reset();
+      }).catch(err => {
+        document.getElementById("status").innerText = "❌ Gagal kirim data.";
+      });
+    });
+  </script>
+</body>
+</html>
