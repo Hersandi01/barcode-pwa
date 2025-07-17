@@ -39,6 +39,12 @@
 
     <label for="ncm">NCM:</label>
     <input type="text" id="ncm">
+
+    <label for="barcode">Barcode:</label>
+    <input type="text" id="barcode">
+
+    <label for="berat">Berat:</label>
+    <input type="number" id="berat" inputmode="decimal">
   </div>
 
   <button onclick="kirimData()">Kirim</button>
@@ -76,13 +82,7 @@
     });
 
     function renderSingleForm() {
-      formContainer.innerHTML = `
-        <label for="barcode">Barcode:</label>
-        <input type="text" id="barcode">
-
-        <label for="berat">Berat:</label>
-        <input type="number" id="berat" inputmode="decimal">
-      `;
+      formContainer.innerHTML = "";
     }
 
     function renderMassalForm(jumlah) {
