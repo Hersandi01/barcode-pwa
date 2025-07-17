@@ -11,20 +11,15 @@
         max-width: 500px;
         margin: auto;
       }
-      video {
-        border: 1px solid black;
+      #reader {
         width: 100%;
-        max-width: 400px;
+        margin-bottom: 20px;
       }
       .scanner-frame {
-        position: absolute;
-        top: 10%;
-        left: 10%;
-        width: 80%;
-        height: 30%;
         border: 2px dashed red;
-        box-sizing: border-box;
-        pointer-events: none;
+        margin-top: -260px;
+        margin-bottom: 10px;
+        height: 200px;
       }
       input, select, button {
         width: 100%;
@@ -36,24 +31,24 @@
         font-weight: bold;
       }
     </style>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
   </head>
   <body>
     <h2>Scan Barcode GS1-128</h2>
+
     <label for="cameraSelect">Pilih Kamera:</label>
     <select id="cameraSelect">
-      <option value="auto">Preferensi Auto Focus & Zoom</option>
+      <option disabled selected>Pilih kamera...</option>
     </select>
-    <div style="position: relative;">
-      <video id="video" autoplay playsinline></video>
-      <div class="scanner-frame"></div>
-    </div>
 
     <label for="modeSelect">Mode Input:</label>
     <select id="modeSelect">
       <option value="scan">Scan Barcode</option>
       <option value="manual">Input Manual</option>
     </select>
+
+    <div id="reader"></div>
+    <div class="scanner-frame"></div>
 
     <form action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec" method="POST">
       <label>Barcode:</label>
@@ -80,13 +75,64 @@
     <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
     <script>
-      const codeReader = new ZXing.BrowserMultiFormatReader();
-      const videoElement = document.getElementById("video");
-      const cameraSelect = document.getElementById("cameraSelect");
-      const beepSound = document.getElementById("beep");
-      const modeSelect = document.getElementById("modeSelect");
       const barcodeInput = document.getElementById("barcode");
       const skuInput = document.getElementById("sku");
+      const modeSelect = document.getElementById("modeSelect");
+      const cameraSelect = document.getElementById("cameraSelect");
+      const beep = document.getElementById("beep");
+      let html5QrCode;
+
+      function initCameraOptions() {
+        Html5Qrcode.getCameras().then(devices => {
+          cameraSelect.innerHTML = "";
+          devices.forEach((device, index) => {
+            const option = document.createElement("option");
+            option.value = device.id;
+            option.text = device.label || `Camera ${index + 1}`;
+            cameraSelect.appendChild(option);
+          });
+          
+          if (devices.length > 0) {
+            cameraSelect.value = devices[0].id;
+            startScanner(devices[0].id);
+          }
+        });
+      }
+
+      function startScanner(cameraId) {
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 100 },
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          }
+        };
+
+        if (html5QrCode) {
+          html5QrCode.stop().then(() => {
+            document.getElementById("reader").innerHTML = "";
+            html5QrCode.start(cameraId, config, onScanSuccess);
+          });
+        } else {
+          html5QrCode = new Html5Qrcode("reader");
+          html5QrCode.start(cameraId, config, onScanSuccess);
+        }
+      }
+
+      function onScanSuccess(decodedText) {
+        barcodeInput.value = decodedText;
+        skuInput.value = "";
+        beep.play();
+      }
+
+      cameraSelect.addEventListener("change", function () {
+        if (html5QrCode) {
+          html5QrCode.stop().then(() => {
+            document.getElementById("reader").innerHTML = "";
+            startScanner(this.value);
+          });
+        }
+      });
 
       modeSelect.addEventListener("change", function () {
         const manual = this.value === "manual";
@@ -97,48 +143,7 @@
         }
       });
 
-      function startCamera(deviceId, useCustomPrefs = false) {
-        codeReader.reset();
-        const constraints = useCustomPrefs
-          ? {
-              video: {
-                facingMode: "environment",
-                focusMode: "continuous",
-                zoom: 2 // mencoba zoom jika didukung
-              }
-            }
-          : deviceId;
-
-        codeReader.decodeFromVideoDevice(constraints, videoElement, (result, err) => {
-          if (result) {
-            barcodeInput.value = result.text;
-            beepSound.play();
-            skuInput.value = "";
-          }
-        });
-      }
-
-      codeReader.listVideoInputDevices().then((devices) => {
-        devices.forEach((device) => {
-          const option = document.createElement("option");
-          option.value = device.deviceId;
-          option.text = device.label || `Kamera ${cameraSelect.length}`;
-          cameraSelect.appendChild(option);
-        });
-
-        // default kamera pertama
-        if (devices.length > 0) {
-          startCamera(devices[0].deviceId);
-        }
-      });
-
-      cameraSelect.addEventListener("change", function () {
-        if (this.value === "auto") {
-          startCamera(null, true);
-        } else {
-          startCamera(this.value);
-        }
-      });
+      window.addEventListener("load", initCameraOptions);
     </script>
   </body>
 </html>
