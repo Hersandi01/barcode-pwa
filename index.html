@@ -10,20 +10,26 @@
         padding: 10px;
         max-width: 500px;
         margin: auto;
-        position: relative;
       }
-      video {
-        border: 1px solid black;
+      .video-wrapper {
+        position: relative;
         width: 100%;
         max-width: 400px;
+        margin: auto;
+      }
+      .video-wrapper video {
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 1px solid black;
       }
       .frame-box {
         position: absolute;
-        top: 45px;
+        top: 30%;
         left: 50%;
-        transform: translateX(-50%);
-        width: 250px;
-        height: 100px;
+        transform: translate(-50%, -50%);
+        width: 70%;
+        height: 30%;
         border: 2px dashed red;
         box-sizing: border-box;
         z-index: 2;
@@ -47,11 +53,10 @@
   </head>
   <body>
     <h2>Scan Barcode GS1-128</h2>
-<div class="video-wrapper">
-  <video id="video" autoplay></video>
-  <div class="frame-box"></div>
-</div>
-
+    <div class="video-wrapper">
+      <video id="video" autoplay></video>
+      <div class="frame-box"></div>
+    </div>
 
     <form
       action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
