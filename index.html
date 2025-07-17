@@ -8,10 +8,10 @@
       body {
         font-family: Arial, sans-serif;
         padding: 10px;
-        max-width: 500px;
+        max-width: 600px;
         margin: auto;
       }
-      input, button {
+      input, select, button {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
@@ -20,23 +20,56 @@
       label {
         font-weight: bold;
       }
+      .hidden {
+        display: none;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 4px;
+      }
     </style>
   </head>
   <body>
     <h2>Input Barcode - Mode Zebra Scanner</h2>
 
-    <form action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec" method="POST">
-      <label>Barcode:</label>
-      <input type="text" id="barcode" name="barcode" required autofocus />
+    <label>Mode Input:</label>
+    <select id="modeInput">
+      <option value="single">Single Input</option>
+      <option value="massal">Massal</option>
+    </select>
 
-      <label>SKU:</label>
-      <input type="text" id="sku" name="sku" disabled />
+    <form id="formZebra" action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec" method="POST">
+      <div id="singleInput">
+        <label>Barcode:</label>
+        <input type="text" id="barcode" name="barcode" required autofocus />
+
+        <label>SKU:</label>
+        <input type="text" id="sku" name="sku" disabled />
+      </div>
+
+      <div id="massalInput" class="hidden">
+        <label>Jumlah Bobbin:</label>
+        <select id="jumlahBobbin">
+          <option value="">Pilih...</option>
+          ${[...Array(10).keys()].map(i => `<option value="${i+1}">${i+1}</option>`).join('')}
+        </select>
+
+        <table>
+          <tbody id="bobbinTable">
+            ${[...Array(10).keys()].map(i => `
+              <tr class="bobbin-row hidden" id="row${i+1}">
+                <td><input type="text" name="barcode${i+1}" placeholder="Barcode ${i+1}" /></td>
+                <td><input type="number" name="berat${i+1}" placeholder="Berat" /></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
 
       <label>Nama:</label>
       <input type="text" name="nama" required />
-
-      <label>Berat:</label>
-      <input type="number" name="berat" required />
 
       <label>Issue:</label>
       <input type="text" name="issue" required />
@@ -50,9 +83,36 @@
     <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
     <script>
+      const modeInput = document.getElementById("modeInput");
+      const singleInputDiv = document.getElementById("singleInput");
+      const massalInputDiv = document.getElementById("massalInput");
+      const jumlahBobbin = document.getElementById("jumlahBobbin");
+      const bobbinRows = document.querySelectorAll(".bobbin-row");
       const barcodeInput = document.getElementById("barcode");
       const skuInput = document.getElementById("sku");
       const beep = document.getElementById("beep");
+
+      modeInput.addEventListener("change", function () {
+        if (this.value === "single") {
+          singleInputDiv.classList.remove("hidden");
+          massalInputDiv.classList.add("hidden");
+        } else {
+          singleInputDiv.classList.add("hidden");
+          massalInputDiv.classList.remove("hidden");
+        }
+      });
+
+      jumlahBobbin.addEventListener("change", function () {
+        const val = parseInt(this.value);
+        bobbinRows.forEach((row, idx) => {
+          if (idx < val) {
+            row.classList.remove("hidden");
+          } else {
+            row.classList.add("hidden");
+            row.querySelectorAll("input").forEach(input => input.value = "");
+          }
+        });
+      });
 
       barcodeInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
