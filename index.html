@@ -1,143 +1,101 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Input Barcode Zebra</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        padding: 10px;
-        max-width: 500px;
-        margin: auto;
-      }
-      input, button, select {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        margin-bottom: 10px;
-      }
-      label {
-        font-weight: bold;
-      }
-      .hidden {
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>Input Barcode</h2>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Input Barcode - Mode Zebra Scanner</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    label { font-weight: bold; display: block; margin-top: 10px; }
+    input, select, button { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h2>Input Barcode - Mode Zebra Scanner</h2>
 
-    <label for="mode">Mode Input:</label>
-    <select id="mode">
-      <option value="single">Single Input</option>
-      <option value="massal">Massal</option>
+  <label for="mode">Mode Input:</label>
+  <select id="mode">
+    <option value="single">Single</option>
+    <option value="massal">Massal</option>
+  </select>
+
+  <div id="jumlah-bobbin-section" class="hidden">
+    <label for="jumlahBobbin">Jumlah Bobbin:</label>
+    <select id="jumlahBobbin">
+      <option value="">Pilih...</option>
+      ${[...Array(10).keys()].map(i => `<option value="${i+1}">${i+1}</option>`).join('')}
     </select>
+  </div>
 
-    <form id="form-barcode" action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec" method="POST">
-      <div id="single-input-section">
-        <label>Barcode:</label>
-        <input type="text" id="barcode" name="barcode" required autofocus />
+  <div id="form-container"></div>
 
-        <label>SKU:</label>
-        <input type="text" id="sku" name="sku" disabled />
-      </div>
+  <label for="tanggal">Tanggal:</label>
+  <input type="date" id="tanggal">
 
-      <div id="massal-section" class="hidden">
-        <label>Jumlah Bobbin:</label>
-        <select id="jumlah-bobbin">
-          <option value="">Pilih...</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-        </select>
+  <label for="nama">Nama:</label>
+  <input type="text" id="nama">
 
-        <div id="bobbin-fields"></div>
-      </div>
+  <label for="issue">Issue:</label>
+  <input type="text" id="issue">
 
-      <label>Nama:</label>
-      <input type="text" name="nama" required />
+  <label for="ncm">NCM:</label>
+  <input type="text" id="ncm">
 
-      <label>Issue:</label>
-      <input type="text" name="issue" required />
+  <button onclick="kirimData()">Kirim</button>
 
-      <label>NCM:</label>
-      <input type="text" name="ncm" required />
+  <script>
+    const modeSelect = document.getElementById('mode');
+    const jumlahBobbinSection = document.getElementById('jumlah-bobbin-section');
+    const jumlahBobbinSelect = document.getElementById('jumlahBobbin');
+    const formContainer = document.getElementById('form-container');
 
-      <button type="submit">Kirim</button>
-    </form>
+    modeSelect.addEventListener('change', () => {
+      if (modeSelect.value === 'massal') {
+        jumlahBobbinSection.classList.remove('hidden');
+        renderMassalForm(jumlahBobbinSelect.value);
+      } else {
+        jumlahBobbinSection.classList.add('hidden');
+        renderSingleForm();
+      }
+    });
 
-    <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+    jumlahBobbinSelect.addEventListener('change', () => {
+      if (modeSelect.value === 'massal') {
+        renderMassalForm(jumlahBobbinSelect.value);
+      }
+    });
 
-    <script>
-      const modeSelect = document.getElementById("mode");
-      const singleInputSection = document.getElementById("single-input-section");
-      const massalSection = document.getElementById("massal-section");
-      const jumlahBobbin = document.getElementById("jumlah-bobbin");
-      const bobbinFields = document.getElementById("bobbin-fields");
-      const beep = document.getElementById("beep");
-      const barcodeInput = document.getElementById("barcode");
-      const skuInput = document.getElementById("sku");
+    function renderSingleForm() {
+      formContainer.innerHTML = `
+        <label for="barcode">Barcode:</label>
+        <input type="text" id="barcode">
 
-      modeSelect.addEventListener("change", function () {
-        if (modeSelect.value === "massal") {
-          singleInputSection.classList.add("hidden");
-          massalSection.classList.remove("hidden");
-        } else {
-          singleInputSection.classList.remove("hidden");
-          massalSection.classList.add("hidden");
-        }
-      });
+        <label for="berat">Berat:</label>
+        <input type="number" id="berat" inputmode="decimal">
+      `;
+    }
 
-      jumlahBobbin.addEventListener("change", function () {
-        bobbinFields.innerHTML = "";
-        const count = parseInt(jumlahBobbin.value);
-        for (let i = 0; i < count; i++) {
-          const wrapper = document.createElement("div");
-          wrapper.innerHTML = `
-            <label>Barcode ${i + 1}:</label>
-            <input type="text" name="barcode${i + 1}" />
+    function renderMassalForm(jumlah) {
+      let html = '';
+      for (let i = 1; i <= jumlah; i++) {
+        html += `
+          <label for="barcode${i}">Barcode ${i}:</label>
+          <input type="text" id="barcode${i}">
 
-            <label>Berat ${i + 1}:</label>
-            <input type="text" name="berat${i + 1}" />
-          `;
-          bobbinFields.appendChild(wrapper);
-        }
-      });
+          <label for="berat${i}">Berat ${i}:</label>
+          <input type="number" id="berat${i}" inputmode="decimal">
+        `;
+      }
+      formContainer.innerHTML = html;
+    }
 
-      barcodeInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          beep.play();
-          if (!barcodeInput.value) {
-            skuInput.disabled = false;
-            skuInput.focus();
-          } else {
-            skuInput.disabled = true;
-            document.querySelector("[name='nama']").focus();
-          }
-        }
-      });
+    function kirimData() {
+      alert('Data akan dikirim... (simulasi)');
+    }
 
-      barcodeInput.addEventListener("input", function () {
-        if (barcodeInput.value.trim() === "") {
-          skuInput.disabled = false;
-        } else {
-          skuInput.disabled = true;
-          skuInput.value = "";
-        }
-      });
-
-      window.addEventListener("load", function () {
-        barcodeInput.focus();
-      });
-    </script>
-  </body>
+    // Default mode saat halaman dimuat
+    renderSingleForm();
+  </script>
+</body>
 </html>
