@@ -64,11 +64,18 @@
         .listVideoInputDevices()
         .then((devices) => {
           if (devices.length > 0) {
-            codeReader.decodeFromVideoDevice(devices[0].deviceId, videoElement, (result, err) => {
-              if (result) {
-                document.getElementById("barcode").value = result.text;
-              }
-            });
+codeReader.decodeFromConstraints({
+  video: {
+    facingMode: "environment", // ✅ kamera belakang
+    width: { ideal: 1280 },     // ✅ resolusi tinggi bantu fokus
+    height: { ideal: 720 }
+  }
+}, videoElement, (result, err) => {
+  if (result) {
+    document.getElementById("barcode").value = result.text;
+  }
+});
+
           } else {
             alert("❌ Tidak ada kamera ditemukan.");
           }
