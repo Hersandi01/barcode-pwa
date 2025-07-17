@@ -155,18 +155,28 @@
             });
 
             function startScanner(deviceId) {
-              codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
-                if (result) {
-                  document.getElementById("barcode").value = result.text;
-                  const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-                  beep.play();
-                }
-              });
-            }
-          })
-          .catch((err) => {
-            alert("❌ Gagal akses kamera: " + err);
-          });
+navigator.mediaDevices.getUserMedia({
+  video: {
+    deviceId: { exact: deviceId },
+    facingMode: "environment",
+    focusMode: "continuous", // optional, hanya preferensi
+    advanced: [{ zoom: 2 }] // preferensi zoom jika didukung
+  }
+})
+.then((stream) => {
+  videoElement.srcObject = stream;
+  codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
+    if (result) {
+      document.getElementById("barcode").value = result.text;
+      const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+      beep.play();
+    }
+  });
+})
+.catch((err) => {
+  alert("❌ Gagal akses kamera dengan preferensi fokus: " + err.message);
+});
+
       }
 
       function validateForm() {
