@@ -1,156 +1,137 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Input Barcode - Mode Zebra Scanner</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Input Barcode Massal</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label { font-weight: bold; display: block; margin-top: 10px; }
-    input, select, button { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; }
-    .hidden { display: none; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    label,
+    select,
+    input,
+    button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+
+    .bobbin-group {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
-<body>
-  <h2>Input Barcode - Mode Zebra Scanner</h2>
 
-  <label for="mode">Mode Input:</label>
-  <select id="mode">
-    <option value="single">Single</option>
-    <option value="massal">Massal</option>
+<body>
+  <h2>Input Barcode Massal</h2>
+
+  <!-- Isian data utama hanya sekali -->
+  <label>Nama:</label>
+  <input type="text" id="nama" required />
+
+  <label>Tanggal:</label>
+  <input type="date" id="tanggal" required />
+
+  <label>Issue:</label>
+  <input type="text" id="issue" required />
+
+  <label>NCM:</label>
+  <input type="text" id="ncm" required />
+
+  <label for="jumlah">Jumlah Bobbin:</label>
+  <select id="jumlah" required>
+    <option value="">Pilih jumlah</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+    <option value="10">10</option>
   </select>
 
-  <div id="jumlah-bobbin-section" class="hidden">
-    <label for="jumlahBobbin">Jumlah Bobbin:</label>
-    <select id="jumlahBobbin"></select>
-  </div>
+  <form id="form-massal">
+    <div id="bobbin-container"></div>
+    <button type="submit">Kirim ke Google Sheet</button>
+  </form>
 
-  <div id="form-container"></div>
-
-  <div id="single-input-section">
-    <label for="tanggal">Tanggal:</label>
-    <input type="date" id="tanggal">
-
-    <label for="nama">Nama:</label>
-    <input type="text" id="nama">
-
-    <label for="issue">Issue:</label>
-    <input type="text" id="issue">
-
-    <label for="ncm">NCM:</label>
-    <input type="text" id="ncm">
-
-    <label for="barcode">Barcode:</label>
-    <input type="text" id="barcode">
-
-    <label for="berat">Berat:</label>
-    <input type="number" id="berat" inputmode="decimal">
-  </div>
-
-  <button onclick="kirimData()">Kirim</button>
+  <p id="status"></p>
 
   <script>
-    const modeSelect = document.getElementById('mode');
-    const jumlahBobbinSelect = document.getElementById('jumlahBobbin');
-    const jumlahBobbinSection = document.getElementById('jumlah-bobbin-section');
-    const formContainer = document.getElementById('form-container');
-    const singleInputSection = document.getElementById('single-input-section');
+    const jumlahSelect = document.getElementById("jumlah");
+    const container = document.getElementById("bobbin-container");
+    const status = document.getElementById("status");
+    const url = "https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec";
 
-    for (let i = 1; i <= 10; i++) {
-      const option = document.createElement('option');
-      option.value = i;
-      option.textContent = i;
-      jumlahBobbinSelect.appendChild(option);
-    }
+    jumlahSelect.addEventListener("change", () => {
+      container.innerHTML = "";
+      const jumlah = parseInt(jumlahSelect.value);
+      for (let i = 0; i < jumlah; i++) {
+        const div = document.createElement("div");
+        div.className = "bobbin-group";
+        div.innerHTML = `
+          <h4>Bobbin ${i + 1}</h4>
+          <label>Barcode:</label>
+          <input type="text" name="barcode" required />
 
-    modeSelect.addEventListener('change', () => {
-      if (modeSelect.value === 'massal') {
-        jumlahBobbinSection.classList.remove('hidden');
-        singleInputSection.classList.add('hidden');
-        renderMassalForm(jumlahBobbinSelect.value);
-      } else {
-        jumlahBobbinSection.classList.add('hidden');
-        singleInputSection.classList.remove('hidden');
-        renderSingleForm();
-      }
-    });
-
-    jumlahBobbinSelect.addEventListener('change', () => {
-      if (modeSelect.value === 'massal') {
-        renderMassalForm(jumlahBobbinSelect.value);
-      }
-    });
-
-    function renderSingleForm() {
-      formContainer.innerHTML = "";
-    }
-
-    function renderMassalForm(jumlah) {
-      let html = '';
-      for (let i = 1; i <= jumlah; i++) {
-        html += `
-          <label for="tanggal${i}">Tanggal ${i}:</label>
-          <input type="date" id="tanggal${i}">
-
-          <label for="nama${i}">Nama ${i}:</label>
-          <input type="text" id="nama${i}">
-
-          <label for="issue${i}">Issue ${i}:</label>
-          <input type="text" id="issue${i}">
-
-          <label for="ncm${i}">NCM ${i}:</label>
-          <input type="text" id="ncm${i}">
-
-          <label for="barcode${i}">Barcode ${i}:</label>
-          <input type="text" id="barcode${i}">
-
-          <label for="berat${i}">Berat ${i}:</label>
-          <input type="number" id="berat${i}" inputmode="decimal">
+          <label>Berat:</label>
+          <input type="number" name="berat" required inputmode="numeric" />
         `;
+        container.appendChild(div);
       }
-      formContainer.innerHTML = html;
-    }
+    });
 
-    async function kirimData() {
-      const mode = modeSelect.value;
-      let data = [];
+    document.getElementById("form-massal").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const nama = document.getElementById("nama").value;
+      const tanggal = document.getElementById("tanggal").value;
+      const issue = document.getElementById("issue").value;
+      const ncm = document.getElementById("ncm").value;
 
-      if (mode === 'single') {
-        data.push({
-          tanggal: document.getElementById('tanggal').value,
-          nama: document.getElementById('nama').value,
-          issue: document.getElementById('issue').value,
-          ncm: document.getElementById('ncm').value,
-          barcode: document.getElementById('barcode').value,
-          berat: document.getElementById('berat').value
+      const groups = document.querySelectorAll(".bobbin-group");
+      const data = [];
+
+      groups.forEach(group => {
+        const row = {
+          nama: nama,
+          tanggal: tanggal,
+          issue: issue,
+          ncm: ncm,
+          barcode: group.querySelector("input[name='barcode']").value,
+          berat: group.querySelector("input[name='berat']").value,
+        };
+        data.push(row);
+      });
+
+      fetch(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((res) => res.text())
+        .then((res) => {
+          status.innerText = "✅ Data berhasil dikirim!";
+          document.getElementById("form-massal").reset();
+          container.innerHTML = "";
+        })
+        .catch((err) => {
+          status.innerText = "❌ Gagal mengirim data.";
+          console.error("Error:", err);
         });
-      } else {
-        const jumlah = parseInt(jumlahBobbinSelect.value);
-        for (let i = 1; i <= jumlah; i++) {
-          data.push({
-            tanggal: document.getElementById(`tanggal${i}`).value,
-            nama: document.getElementById(`nama${i}`).value,
-            issue: document.getElementById(`issue${i}`).value,
-            ncm: document.getElementById(`ncm${i}`).value,
-            barcode: document.getElementById(`barcode${i}`).value,
-            berat: document.getElementById(`berat${i}`).value
-          });
-        }
-      }
-
-      try {
-        await fetch("https://script.google.com/macros/s/AKfycbzsGLwFyAjQO3IKP4SUk5HVAPndXFWzbV6OAv4BjmRWfd1LmRD6D7aP-_HBS2Vm5ZDcyA/exec", {
-          method: "POST",
-          body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" }
-        });
-        alert("✅ Data berhasil dikirim!");
-      } catch (error) {
-        alert("❌ Gagal mengirim data: " + error.message);
-      }
-    }
-
-    renderSingleForm();
+    });
   </script>
 </body>
+
 </html>
