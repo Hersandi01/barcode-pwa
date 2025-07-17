@@ -75,20 +75,24 @@
           ncm: document.getElementById("ncm").value,
         };
 
-        fetch(webhookURL, {
-          method: "POST",
-          body: JSON.stringify(data),
-          headers: {
-            "Content-Type": "application/json"
-          }
-        })
-          .then((res) => {
-            document.getElementById("status").innerText = "✅ Data berhasil dikirim!";
-            document.getElementById("data-form").reset();
-          })
-          .catch((err) => {
-            document.getElementById("status").innerText = "❌ Gagal kirim data.";
-          });
+       fetch(webhookURL, {
+  method: "POST",
+  mode: "cors", // tambahkan ini
+  body: JSON.stringify(data),
+  headers: {
+    "Content-Type": "application/json"
+  }
+})
+.then((res) => res.text())
+.then((text) => {
+  console.log("Response:", text);
+  document.getElementById("status").innerText = "✅ Data berhasil dikirim!";
+})
+.catch((err) => {
+  console.error("ERROR:", err);
+  document.getElementById("status").innerText = "❌ Gagal kirim data.";
+});
+
       });
     </script>
   </body>
