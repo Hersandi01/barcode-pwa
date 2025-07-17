@@ -30,6 +30,12 @@
       label {
         font-weight: bold;
       }
+      .note {
+        font-size: 0.85em;
+        color: #555;
+        margin-top: -8px;
+        margin-bottom: 10px;
+      }
     </style>
     <script src="https://unpkg.com/html5-qrcode"></script>
   </head>
@@ -40,6 +46,7 @@
     <select id="cameraSelect">
       <option disabled selected>Pilih kamera...</option>
     </select>
+    <div class="note">Preferensi: gunakan kamera dengan Auto Focus & Zoom (biasanya "facing back")</div>
 
     <label for="modeSelect">Mode Input:</label>
     <select id="modeSelect">
@@ -91,7 +98,7 @@
             option.text = device.label || `Camera ${index + 1}`;
             cameraSelect.appendChild(option);
           });
-          
+
           if (devices.length > 0) {
             cameraSelect.value = devices[0].id;
             startScanner(devices[0].id);
@@ -103,6 +110,7 @@
         const config = {
           fps: 10,
           qrbox: { width: 250, height: 100 },
+          focusMode: "continuous",
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
           }
