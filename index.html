@@ -1,110 +1,87 @@
+<!-- HTML (index.html) -->
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Input Barcode Zebra Scanner</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 500px;
-      margin: auto;
-    }
-    input, button {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-    }
-    label {
-      font-weight: bold;
-    }
-    #sku { background-color: #f0f0f0; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode Input Form</title>
 </head>
 <body>
-  <h2>Input Barcode</h2>
-  
-  <form id="form-barcode">
-    <label for="barcode">Barcode:</label>
-    <input type="text" id="barcode" name="barcode" autofocus />
+  <h2>Input Barcode - Zebra / Manual</h2>
+  <form id="barcode-form">
+    <label>Nama: <input type="text" name="nama" required></label><br>
+    <label>Tanggal: <input type="date" name="tanggal" required></label><br>
+    <label>Issue: <input type="text" name="issue"></label><br>
+    <label>NCM: <input type="text" name="ncm"></label><br>
 
-    <label for="sku">SKU (jika barcode kosong):</label>
-    <input type="text" id="sku" name="sku" disabled />
+    <label>Jumlah Bobbin:
+      <select id="jumlah" name="jumlah">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+    </label><br><br>
 
-    <label for="nama">Nama:</label>
-    <input type="text" id="nama" name="nama" required />
+    <div id="bobbin-fields"></div>
 
-    <label for="berat">Berat:</label>
-    <input type="number" id="berat" name="berat" inputmode="numeric" required />
-
-    <label for="issue">Issue:</label>
-    <input type="text" id="issue" name="issue" required />
-
-    <label for="ncm">NCM:</label>
-    <input type="text" id="ncm" name="ncm" required />
-
-    <button type="submit">Kirim</button>
+    <button type="submit">Submit</button>
   </form>
 
-  <p id="status"></p>
-  <audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
-
   <script>
-    const form = document.getElementById("form-barcode");
-    const barcodeInput = document.getElementById("barcode");
-    const skuInput = document.getElementById("sku");
-    const beepSound = document.getElementById("beep");
-    const status = document.getElementById("status");
+    const form = document.getElementById('barcode-form');
+    const bobbinFields = document.getElementById('bobbin-fields');
+    const jumlah = document.getElementById('jumlah');
 
-    const sheetURL = "https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec";
-
-    // Fokus ulang ke barcode setelah load
-    window.onload = () => barcodeInput.focus();
-
-    // Suara dan SKU toggle
-    barcodeInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (barcodeInput.value.trim() === "") {
-          skuInput.disabled = false;
-          skuInput.focus();
-        } else {
-          skuInput.disabled = true;
-          beepSound.play();
-        }
+    function generateBobbinFields(count) {
+      bobbinFields.innerHTML = '';
+      for (let i = 1; i <= count; i++) {
+        bobbinFields.innerHTML += `
+          <fieldset>
+            <legend>Bobbin ${i}</legend>
+            <label>Barcode: <input type="text" name="barcode${i}" required></label><br>
+            <label>Berat: <input type="number" name="berat${i}" step="any" required></label>
+          </fieldset>
+        `;
       }
+    }
+
+    jumlah.addEventListener('change', (e) => {
+      generateBobbinFields(Number(e.target.value));
     });
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const data = new FormData(form);
+      const jumlahBobbin = Number(data.get('jumlah'));
 
-      const data = {
-        barcode: barcodeInput.value.trim() || skuInput.value.trim(),
-        nama: document.getElementById("nama").value,
-        berat: document.getElementById("berat").value,
-        issue: document.getElementById("issue").value,
-        ncm: document.getElementById("ncm").value,
-      };
-
-      fetch(sheetURL, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((res) => res.text())
-        .then(() => {
-          status.textContent = "✅ Data berhasil dikirim.";
-          form.reset();
-          barcodeInput.focus();
-          skuInput.disabled = true;
-        })
-        .catch(() => {
-          status.textContent = "❌ Gagal mengirim data.";
+      for (let i = 1; i <= jumlahBobbin; i++) {
+        const payload = {
+          nama: data.get('nama'),
+          tanggal: data.get('tanggal'),
+          issue: data.get('issue'),
+          ncm: data.get('ncm'),
+          barcode: data.get(`barcode${i}`),
+          berat: data.get(`berat${i}`)
+        };
+        await fetch("https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec", {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify(payload)
         });
+      }
+      alert("Data berhasil dikirim!");
+      form.reset();
+      generateBobbinFields(1);
     });
+
+    generateBobbinFields(1); // default
   </script>
 </body>
 </html>
