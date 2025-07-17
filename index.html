@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scan Barcode GS1-128</title>
+    <title>Input Barcode Zebra</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -11,17 +11,7 @@
         max-width: 500px;
         margin: auto;
       }
-      #reader {
-        width: 100%;
-        margin-bottom: 20px;
-      }
-      .scanner-frame {
-        border: 2px dashed red;
-        margin-top: -260px;
-        margin-bottom: 10px;
-        height: 200px;
-      }
-      input, select, button {
+      input, button {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
@@ -30,30 +20,14 @@
       label {
         font-weight: bold;
       }
-      .note {
-        font-size: 0.85em;
-        color: #555;
-        margin-top: -8px;
-        margin-bottom: 10px;
-      }
     </style>
-    <script src="https://unpkg.com/html5-qrcode"></script>
   </head>
   <body>
-    <h2>Scan Barcode GS1-128</h2>
-
-    <label for="modeSelect">Mode Input:</label>
-    <select id="modeSelect">
-      <option value="scan">Scan Barcode</option>
-      <option value="manual">Input Manual</option>
-    </select>
-
-    <div id="reader"></div>
-    <div class="scanner-frame"></div>
+    <h2>Input Barcode - Mode Zebra Scanner</h2>
 
     <form action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec" method="POST">
       <label>Barcode:</label>
-      <input type="text" id="barcode" name="barcode" readonly required />
+      <input type="text" id="barcode" name="barcode" required autofocus />
 
       <label>SKU:</label>
       <input type="text" id="sku" name="sku" disabled />
@@ -78,51 +52,34 @@
     <script>
       const barcodeInput = document.getElementById("barcode");
       const skuInput = document.getElementById("sku");
-      const modeSelect = document.getElementById("modeSelect");
       const beep = document.getElementById("beep");
-      let html5QrCode = new Html5Qrcode("reader");
 
-      function startScanner() {
-        Html5Qrcode.getCameras().then(devices => {
-          if (devices.length > 0) {
-            const backCamera = devices.find(device => device.label.toLowerCase().includes("back")) || devices[0];
-
-            const config = {
-              fps: 10,
-              qrbox: { width: 250, height: 100 },
-              focusMode: "continuous",
-              experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true,
-              },
-              rememberLastUsedCamera: true,
-            };
-
-            html5QrCode
-              .start(backCamera.id, config, onScanSuccess)
-              .catch(err => {
-                document.getElementById("reader").innerHTML = `<div style="color:red">Gagal memulai kamera: ${err}</div>`;
-              });
+      barcodeInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          beep.play();
+          if (!barcodeInput.value) {
+            skuInput.disabled = false;
+            skuInput.focus();
+          } else {
+            skuInput.disabled = true;
+            document.querySelector("[name='nama']").focus();
           }
-        });
-      }
+        }
+      });
 
-      function onScanSuccess(decodedText) {
-        barcodeInput.value = decodedText;
-        skuInput.value = "";
-        beep.play();
-      }
-
-      modeSelect.addEventListener("change", function () {
-        const manual = this.value === "manual";
-        barcodeInput.readOnly = !manual;
-        skuInput.disabled = !manual;
-
-        if (!manual) {
+      barcodeInput.addEventListener("input", function () {
+        if (barcodeInput.value.trim() === "") {
+          skuInput.disabled = false;
+        } else {
+          skuInput.disabled = true;
           skuInput.value = "";
         }
       });
 
-      window.addEventListener("load", startScanner);
+      window.addEventListener("load", function () {
+        barcodeInput.focus();
+      });
     </script>
   </body>
 </html>
