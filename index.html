@@ -32,9 +32,11 @@
     <h2>Scan Barcode GS1-128</h2>
     <video id="video" autoplay></video>
 
+    <!-- ✅ Ini FORM asli, tanpa JS fetch -->
     <form
       action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
       method="POST"
+      target="_blank"
     >
       <label>Barcode:</label>
       <input type="text" id="barcode" name="barcode" readonly required />
@@ -72,3 +74,8 @@
           }
         })
         .catch((err) => {
+          alert("❌ Gagal akses kamera: " + err);
+        });
+    </script>
+  </body>
+</html>
