@@ -8,7 +8,7 @@
       body {
         font-family: Arial, sans-serif;
         padding: 10px;
-        max-width: 500px;
+        max-width: 800px;
         margin: auto;
       }
       .video-wrapper {
@@ -48,20 +48,40 @@
         color: red;
         margin-bottom: 10px;
       }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f0f0f0;
+      }
+      small {
+        display: block;
+        margin-top: -8px;
+        margin-bottom: 8px;
+        color: #555;
+      }
     </style>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
   </head>
   <body>
-    <h2>Scan Barcode GS1-128</h2>
-    <div class="video-wrapper">
+    <h2 id="title">Scan Barcode GS1-128</h2>
+    <div class="video-wrapper" id="scanner-wrapper">
       <video id="video" autoplay></video>
       <div class="frame-box"></div>
     </div>
 
-    <label for="camera-select">Pilih Kamera:</label>
+    <label for="camera-select" id="camera-label">Pilih Kamera:</label>
     <select id="camera-select"></select>
 
     <form
+      id="barcode-form"
       action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
       method="POST"
       onsubmit="return validateForm();"
@@ -69,7 +89,9 @@
       <div id="error" class="error"></div>
 
       <label>Barcode:</label>
-      <input type="text" id="barcode" name="barcode" readonly required />
+      <input type="text" id="barcode" name="barcode" required />
+      <small>Jika barcode tidak terbaca otomatis, isi manual di sini.</small>
+      <button type="button" onclick="document.getElementById('barcode').value = ''">Kosongkan Barcode</button>
 
       <label>Nama:</label>
       <input type="text" id="nama" name="nama" required />
@@ -86,49 +108,65 @@
       <button type="submit">Kirim</button>
     </form>
 
+    <div id="admin-table"></div>
+
     <script>
-      const codeReader = new ZXing.BrowserMultiFormatReader();
+      const urlParams = new URLSearchParams(window.location.search);
+      const isAdmin = urlParams.get("mode") === "admin";
       const videoElement = document.getElementById("video");
       const selectElement = document.getElementById("camera-select");
+      const scannerWrapper = document.getElementById("scanner-wrapper");
+      const barcodeForm = document.getElementById("barcode-form");
+      const cameraLabel = document.getElementById("camera-label");
       let currentDeviceId = null;
 
-      codeReader
-        .listVideoInputDevices()
-        .then((devices) => {
-          if (devices.length === 0) {
-            alert("❌ Tidak ada kamera ditemukan.");
-            return;
-          }
+      if (isAdmin) {
+        document.getElementById("title").innerText = "Mode Admin - Data Terkirim";
+        scannerWrapper.style.display = "none";
+        barcodeForm.style.display = "none";
+        selectElement.style.display = "none";
+        cameraLabel.style.display = "none";
+        fetchSheetData();
+      } else {
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        codeReader
+          .listVideoInputDevices()
+          .then((devices) => {
+            if (devices.length === 0) {
+              alert("❌ Tidak ada kamera ditemukan.");
+              return;
+            }
 
-          devices.forEach((device) => {
-            const option = document.createElement("option");
-            option.value = device.deviceId;
-            option.text = device.label || `Kamera ${selectElement.length + 1}`;
-            selectElement.appendChild(option);
-          });
+            devices.forEach((device) => {
+              const option = document.createElement("option");
+              option.value = device.deviceId;
+              option.text = device.label || `Kamera ${selectElement.length + 1}`;
+              selectElement.appendChild(option);
+            });
 
-          currentDeviceId = devices.find(d => d.label.toLowerCase().includes("back"))?.deviceId || devices[0].deviceId;
-          selectElement.value = currentDeviceId;
-          startScanner(currentDeviceId);
-
-          selectElement.addEventListener("change", () => {
-            codeReader.reset();
-            currentDeviceId = selectElement.value;
+            currentDeviceId = devices.find(d => d.label.toLowerCase().includes("back"))?.deviceId || devices[0].deviceId;
+            selectElement.value = currentDeviceId;
             startScanner(currentDeviceId);
-          });
-        })
-        .catch((err) => {
-          alert("❌ Gagal akses kamera: " + err);
-        });
 
-      function startScanner(deviceId) {
-        codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
-          if (result) {
-            document.getElementById("barcode").value = result.text;
-            const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-            beep.play();
-          }
-        });
+            selectElement.addEventListener("change", () => {
+              codeReader.reset();
+              currentDeviceId = selectElement.value;
+              startScanner(currentDeviceId);
+            });
+
+            function startScanner(deviceId) {
+              codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
+                if (result) {
+                  document.getElementById("barcode").value = result.text;
+                  const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+                  beep.play();
+                }
+              });
+            }
+          })
+          .catch((err) => {
+            alert("❌ Gagal akses kamera: " + err);
+          });
       }
 
       function validateForm() {
@@ -146,6 +184,34 @@
 
         errorDiv.innerText = "";
         return true;
+      }
+
+      function fetchSheetData() {
+        fetch("https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec")
+          .then((res) => res.json())
+          .then((rows) => {
+            const table = document.createElement("table");
+            const thead = document.createElement("thead");
+            thead.innerHTML = `<tr><th>Waktu</th><th>Barcode</th><th>Nama</th><th>Berat</th><th>Issue</th><th>NCM</th></tr>`;
+            const tbody = document.createElement("tbody");
+
+            rows.forEach((row) => {
+              const tr = document.createElement("tr");
+              row.forEach((cell) => {
+                const td = document.createElement("td");
+                td.textContent = cell;
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            document.getElementById("admin-table").appendChild(table);
+          })
+          .catch((err) => {
+            document.getElementById("admin-table").innerText = "❌ Gagal memuat data.";
+          });
       }
     </script>
   </body>
