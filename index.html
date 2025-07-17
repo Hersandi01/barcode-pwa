@@ -41,9 +41,11 @@
   <body>
     <h2>Scan Barcode GS1-128</h2>
     <label for="cameraSelect">Pilih Kamera:</label>
-    <select id="cameraSelect"></select>
+    <select id="cameraSelect">
+      <option value="auto">Preferensi Auto Focus & Zoom</option>
+    </select>
     <div style="position: relative;">
-      <video id="video" autoplay></video>
+      <video id="video" autoplay playsinline></video>
       <div class="scanner-frame"></div>
     </div>
 
@@ -95,26 +97,19 @@
         }
       });
 
-      codeReader.listVideoInputDevices().then((devices) => {
-        devices.forEach((device) => {
-          const option = document.createElement("option");
-          option.value = device.deviceId;
-          option.text = device.label || `Kamera ${cameraSelect.length + 1}`;
-          cameraSelect.appendChild(option);
-        });
-
-        if (devices.length > 0) {
-          startCamera(devices[0].deviceId);
-        }
-      });
-
-      cameraSelect.addEventListener("change", function () {
-        startCamera(this.value);
-      });
-
-      function startCamera(deviceId) {
+      function startCamera(deviceId, useCustomPrefs = false) {
         codeReader.reset();
-        codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
+        const constraints = useCustomPrefs
+          ? {
+              video: {
+                facingMode: "environment",
+                focusMode: "continuous",
+                zoom: 2 // mencoba zoom jika didukung
+              }
+            }
+          : deviceId;
+
+        codeReader.decodeFromVideoDevice(constraints, videoElement, (result, err) => {
           if (result) {
             barcodeInput.value = result.text;
             beepSound.play();
@@ -122,6 +117,28 @@
           }
         });
       }
+
+      codeReader.listVideoInputDevices().then((devices) => {
+        devices.forEach((device) => {
+          const option = document.createElement("option");
+          option.value = device.deviceId;
+          option.text = device.label || `Kamera ${cameraSelect.length}`;
+          cameraSelect.appendChild(option);
+        });
+
+        // default kamera pertama
+        if (devices.length > 0) {
+          startCamera(devices[0].deviceId);
+        }
+      });
+
+      cameraSelect.addEventListener("change", function () {
+        if (this.value === "auto") {
+          startCamera(null, true);
+        } else {
+          startCamera(this.value);
+        }
+      });
     </script>
   </body>
 </html>
