@@ -22,42 +22,49 @@
 
   <div id="jumlah-bobbin-section" class="hidden">
     <label for="jumlahBobbin">Jumlah Bobbin:</label>
-    <select id="jumlahBobbin">
-      <option value="">Pilih...</option>
-      <script>
-        document.write([...Array(10).keys()].map(i => `<option value="${i+1}">${i+1}</option>`).join(''));
-      </script>
-    </select>
+    <select id="jumlahBobbin"></select>
   </div>
 
   <div id="form-container"></div>
 
-  <label for="tanggal">Tanggal:</label>
-  <input type="date" id="tanggal">
+  <div id="single-input-section">
+    <label for="tanggal">Tanggal:</label>
+    <input type="date" id="tanggal">
 
-  <label for="nama">Nama:</label>
-  <input type="text" id="nama">
+    <label for="nama">Nama:</label>
+    <input type="text" id="nama">
 
-  <label for="issue">Issue:</label>
-  <input type="text" id="issue">
+    <label for="issue">Issue:</label>
+    <input type="text" id="issue">
 
-  <label for="ncm">NCM:</label>
-  <input type="text" id="ncm">
+    <label for="ncm">NCM:</label>
+    <input type="text" id="ncm">
+  </div>
 
   <button onclick="kirimData()">Kirim</button>
 
   <script>
     const modeSelect = document.getElementById('mode');
-    const jumlahBobbinSection = document.getElementById('jumlah-bobbin-section');
     const jumlahBobbinSelect = document.getElementById('jumlahBobbin');
+    const jumlahBobbinSection = document.getElementById('jumlah-bobbin-section');
     const formContainer = document.getElementById('form-container');
+    const singleInputSection = document.getElementById('single-input-section');
+
+    for (let i = 1; i <= 10; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i;
+      jumlahBobbinSelect.appendChild(option);
+    }
 
     modeSelect.addEventListener('change', () => {
       if (modeSelect.value === 'massal') {
         jumlahBobbinSection.classList.remove('hidden');
+        singleInputSection.classList.add('hidden');
         renderMassalForm(jumlahBobbinSelect.value);
       } else {
         jumlahBobbinSection.classList.add('hidden');
+        singleInputSection.classList.remove('hidden');
         renderSingleForm();
       }
     });
@@ -82,6 +89,18 @@
       let html = '';
       for (let i = 1; i <= jumlah; i++) {
         html += `
+          <label for="tanggal${i}">Tanggal ${i}:</label>
+          <input type="date" id="tanggal${i}">
+
+          <label for="nama${i}">Nama ${i}:</label>
+          <input type="text" id="nama${i}">
+
+          <label for="issue${i}">Issue ${i}:</label>
+          <input type="text" id="issue${i}">
+
+          <label for="ncm${i}">NCM ${i}:</label>
+          <input type="text" id="ncm${i}">
+
           <label for="barcode${i}">Barcode ${i}:</label>
           <input type="text" id="barcode${i}">
 
@@ -94,18 +113,14 @@
 
     async function kirimData() {
       const mode = modeSelect.value;
-      const nama = document.getElementById('nama').value;
-      const issue = document.getElementById('issue').value;
-      const ncm = document.getElementById('ncm').value;
-      const tanggal = document.getElementById('tanggal').value;
       let data = [];
 
       if (mode === 'single') {
         data.push({
-          tanggal,
-          nama,
-          issue,
-          ncm,
+          tanggal: document.getElementById('tanggal').value,
+          nama: document.getElementById('nama').value,
+          issue: document.getElementById('issue').value,
+          ncm: document.getElementById('ncm').value,
           barcode: document.getElementById('barcode').value,
           berat: document.getElementById('berat').value
         });
@@ -113,10 +128,10 @@
         const jumlah = parseInt(jumlahBobbinSelect.value);
         for (let i = 1; i <= jumlah; i++) {
           data.push({
-            tanggal,
-            nama,
-            issue,
-            ncm,
+            tanggal: document.getElementById(`tanggal${i}`).value,
+            nama: document.getElementById(`nama${i}`).value,
+            issue: document.getElementById(`issue${i}`).value,
+            ncm: document.getElementById(`ncm${i}`).value,
             barcode: document.getElementById(`barcode${i}`).value,
             berat: document.getElementById(`berat${i}`).value
           });
@@ -129,13 +144,12 @@
           body: JSON.stringify(data),
           headers: { "Content-Type": "application/json" }
         });
-        alert("Data berhasil dikirim!");
+        alert("✅ Data berhasil dikirim!");
       } catch (error) {
-        alert("Gagal mengirim data: " + error.message);
+        alert("❌ Gagal mengirim data: " + error.message);
       }
     }
 
-    // Default mode saat halaman dimuat
     renderSingleForm();
   </script>
 </body>
