@@ -1,87 +1,71 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scan Barcode GS1-128</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 10px; max-width: 500px; margin: auto; }
-    video { border: 1px solid black; width: 100%; max-width: 100%; }
-    input, button, select { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; }
-    label { font-weight: bold; }
-  </style>
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
-</head>
-<body>
-  <h2>Scan Barcode GS1-128</h2>
-
-  <label for="cameraSelect">Pilih Kamera:</label>
-  <select id="cameraSelect"></select>
-
-  <video id="video" autoplay></video>
-
-  <form
-    action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
-    method="POST"
-  >
-    <label>Barcode:</label>
-    <input type="text" id="barcode" name="barcode" readonly required />
-
-    <label>Nama:</label>
-    <input type="text" name="nama" required />
-
-    <label>Berat:</label>
-    <input type="number" name="berat" required />
-
-    <label>Issue:</label>
-    <input type="text" name="issue" required />
-
-    <label>NCM:</label>
-    <input type="text" name="ncm" required />
-
-    <button type="submit">Kirim</button>
-  </form>
-
-  <p id="status"></p>
-
-  <script>
-    const codeReader = new ZXing.BrowserMultiFormatReader();
-    const videoElement = document.getElementById("video");
-    const cameraSelect = document.getElementById("cameraSelect");
-
-    let currentDeviceId;
-
-    // Tampilkan daftar kamera
-    codeReader.listVideoInputDevices().then((devices) => {
-      devices.forEach((device) => {
-        const option = document.createElement("option");
-        option.value = device.deviceId;
-        option.text = device.label || `Camera ${cameraSelect.length + 1}`;
-        cameraSelect.appendChild(option);
-      });
-
-      // Pilih kamera default pertama
-      if (devices.length > 0) {
-        currentDeviceId = devices[0].deviceId;
-        startScanner(currentDeviceId);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scan Barcode GS1-128</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 10px;
+        max-width: 500px;
+        margin: auto;
       }
-    });
+      video {
+        border: 1px solid black;
+        width: 100%;
+        max-width: 400px;
+      }
+      input, button {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+      }
+      label {
+        font-weight: bold;
+      }
+      .error {
+        color: red;
+        margin-bottom: 10px;
+      }
+    </style>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+  </head>
+  <body>
+    <h2>Scan Barcode GS1-128</h2>
+    <video id="video" autoplay></video>
 
-    // Saat user pilih kamera
-    cameraSelect.addEventListener("change", () => {
-      currentDeviceId = cameraSelect.value;
-      startScanner(currentDeviceId);
-    });
+    <form
+      action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
+      method="POST"
+      onsubmit="return validateForm();"
+    >
+      <div id="error" class="error"></div>
 
-    function startScanner(deviceId) {
-      codeReader.reset();
-      codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
-        if (result) {
-          document.getElementById("barcode").value = result.text;
-          document.getElementById("status").innerText = "✅ Barcode terbaca: " + result.text;
-        }
-      });
-    }
-  </script>
-</body>
-</html>
+      <label>Barcode:</label>
+      <input type="text" id="barcode" name="barcode" readonly required />
+
+      <label>Nama:</label>
+      <input type="text" id="nama" name="nama" required />
+
+      <label>Berat:</label>
+      <input type="number" id="berat" name="berat" required />
+
+      <label>Issue:</label>
+      <input type="text" id="issue" name="issue" required />
+
+      <label>NCM:</label>
+      <input type="text" id="ncm" name="ncm" required />
+
+      <button type="submit">Kirim</button>
+    </form>
+
+    <script>
+      const codeReader = new ZXing.BrowserMultiFormatReader();
+      const videoElement = document.getElementById("video");
+
+      codeReader
+        .listVideoInputDevices()
+        .then((devices) => {
+          const backCam = devices.find(device => device.label.toLo
