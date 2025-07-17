@@ -35,7 +35,7 @@
         z-index: 2;
         pointer-events: none;
       }
-      input, button {
+      input, button, select {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
@@ -57,6 +57,9 @@
       <video id="video" autoplay></video>
       <div class="frame-box"></div>
     </div>
+
+    <label for="camera-select">Pilih Kamera:</label>
+    <select id="camera-select"></select>
 
     <form
       action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
@@ -86,26 +89,47 @@
     <script>
       const codeReader = new ZXing.BrowserMultiFormatReader();
       const videoElement = document.getElementById("video");
+      const selectElement = document.getElementById("camera-select");
+      let currentDeviceId = null;
 
       codeReader
         .listVideoInputDevices()
         .then((devices) => {
-          const backCam = devices.find(device => device.label.toLowerCase().includes('back')) || devices[0];
-          if (devices.length > 0) {
-            codeReader.decodeFromVideoDevice(backCam.deviceId, videoElement, (result, err) => {
-              if (result) {
-                document.getElementById("barcode").value = result.text;
-                const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-                beep.play();
-              }
-            });
-          } else {
+          if (devices.length === 0) {
             alert("❌ Tidak ada kamera ditemukan.");
+            return;
           }
+
+          devices.forEach((device) => {
+            const option = document.createElement("option");
+            option.value = device.deviceId;
+            option.text = device.label || `Kamera ${selectElement.length + 1}`;
+            selectElement.appendChild(option);
+          });
+
+          currentDeviceId = devices.find(d => d.label.toLowerCase().includes("back"))?.deviceId || devices[0].deviceId;
+          selectElement.value = currentDeviceId;
+          startScanner(currentDeviceId);
+
+          selectElement.addEventListener("change", () => {
+            codeReader.reset();
+            currentDeviceId = selectElement.value;
+            startScanner(currentDeviceId);
+          });
         })
         .catch((err) => {
           alert("❌ Gagal akses kamera: " + err);
         });
+
+      function startScanner(deviceId) {
+        codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
+          if (result) {
+            document.getElementById("barcode").value = result.text;
+            const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+            beep.play();
+          }
+        });
+      }
 
       function validateForm() {
         const barcode = document.getElementById("barcode").value.trim();
