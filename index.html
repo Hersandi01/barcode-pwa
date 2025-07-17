@@ -10,13 +10,15 @@
         padding: 10px;
         max-width: 500px;
         margin: auto;
+        position: relative;
       }
       video {
         border: 1px solid black;
         width: 100%;
         max-width: 400px;
       }
-      input, button {
+      input,
+      button {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
@@ -25,18 +27,36 @@
       label {
         font-weight: bold;
       }
+      #overlay {
+        position: absolute;
+        top: 10px;
+        left: 0;
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+        pointer-events: none;
+      }
+      .corner-box {
+        position: absolute;
+        top: 30%;
+        left: 10%;
+        width: 80%;
+        height: 40%;
+        border: 2px dashed red;
+        box-sizing: border-box;
+        border-radius: 8px;
+      }
     </style>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
   </head>
   <body>
     <h2>Scan Barcode GS1-128</h2>
     <video id="video" autoplay></video>
+    <div id="overlay"><div class="corner-box"></div></div>
 
-    <!-- ✅ Ini FORM asli, tanpa JS fetch -->
     <form
       action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
       method="POST"
-      target="_blank"
     >
       <label>Barcode:</label>
       <input type="text" id="barcode" name="barcode" readonly required />
@@ -56,32 +76,37 @@
       <button type="submit">Kirim</button>
     </form>
 
+    <p id="status"></p>
+    <audio id="beep" src="https://www.soundjay.com/buttons/beep-07.wav"></audio>
+
     <script>
       const codeReader = new ZXing.BrowserMultiFormatReader();
       const videoElement = document.getElementById("video");
+      const beep = document.getElementById("beep");
+      const statusText = document.getElementById("status");
 
       codeReader
         .listVideoInputDevices()
         .then((devices) => {
           if (devices.length > 0) {
-codeReader.decodeFromConstraints({
-  video: {
-    facingMode: "environment", // ✅ kamera belakang
-    width: { ideal: 1280 },     // ✅ resolusi tinggi bantu fokus
-    height: { ideal: 720 }
-  }
-}, videoElement, (result, err) => {
-  if (result) {
-    document.getElementById("barcode").value = result.text;
-  }
-});
-
+            codeReader.decodeFromVideoDevice(
+              devices[0].deviceId,
+              videoElement,
+              (result, err) => {
+                if (result) {
+                  document.getElementById("barcode").value = result.text;
+                  beep.play();
+                  statusText.innerText = "✅ Barcode terbaca: " + result.text;
+                  codeReader.reset();
+                }
+              }
+            );
           } else {
-            alert("❌ Tidak ada kamera ditemukan.");
+            statusText.innerText = "❌ Tidak ada kamera ditemukan.";
           }
         })
         .catch((err) => {
-          alert("❌ Gagal akses kamera: " + err);
+          statusText.innerText = "❌ Gagal akses kamera: " + err;
         });
     </script>
   </body>
