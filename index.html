@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Input Barcode Massal</title>
+  <title>Input Massal Barcode (Zebra Mode)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,125 +12,118 @@
       margin: auto;
     }
 
-    label,
-    select,
-    input,
-    button {
+    label, input, button {
       display: block;
       width: 100%;
       margin-bottom: 10px;
       padding: 8px;
+      font-size: 16px;
     }
 
     .bobbin-group {
       border: 1px solid #ccc;
       padding: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-top: 20px;
     }
   </style>
 </head>
-
 <body>
-  <h2>Input Barcode Massal</h2>
+  <h2>Input Massal Barcode (Zebra Scanner)</h2>
 
-  <!-- Isian data utama hanya sekali -->
-  <label>Nama:</label>
-  <input type="text" id="nama" required />
+  <form action="https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec" method="POST">
+    
+    <div class="section-title">Informasi Umum</div>
+    <label>Nama:</label>
+    <input type="text" name="nama" required />
 
-  <label>Tanggal:</label>
-  <input type="date" id="tanggal" required />
+    <label>Tanggal:</label>
+    <input type="date" name="tanggal" required />
 
-  <label>Issue:</label>
-  <input type="text" id="issue" required />
+    <label>Issue:</label>
+    <input type="text" name="issue" required />
 
-  <label>NCM:</label>
-  <input type="text" id="ncm" required />
+    <label>NCM:</label>
+    <input type="text" name="ncm" required />
 
-  <label for="jumlah">Jumlah Bobbin:</label>
-  <select id="jumlah" required>
-    <option value="">Pilih jumlah</option>
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-    <option value="5">5</option>
-    <option value="6">6</option>
-    <option value="7">7</option>
-    <option value="8">8</option>
-    <option value="9">9</option>
-    <option value="10">10</option>
-  </select>
+    <div class="section-title">Detail Bobbin (Maks 10)</div>
 
-  <form id="form-massal">
-    <div id="bobbin-container"></div>
-    <button type="submit">Kirim ke Google Sheet</button>
+    <!-- 10 bobbin input -->
+    <div class="bobbin-group">
+      <label>Bobbin 1 - Barcode:</label>
+      <input type="text" name="barcode1" />
+      <label>Bobbin 1 - Berat:</label>
+      <input type="number" name="berat1" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 2 - Barcode:</label>
+      <input type="text" name="barcode2" />
+      <label>Bobbin 2 - Berat:</label>
+      <input type="number" name="berat2" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 3 - Barcode:</label>
+      <input type="text" name="barcode3" />
+      <label>Bobbin 3 - Berat:</label>
+      <input type="number" name="berat3" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 4 - Barcode:</label>
+      <input type="text" name="barcode4" />
+      <label>Bobbin 4 - Berat:</label>
+      <input type="number" name="berat4" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 5 - Barcode:</label>
+      <input type="text" name="barcode5" />
+      <label>Bobbin 5 - Berat:</label>
+      <input type="number" name="berat5" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 6 - Barcode:</label>
+      <input type="text" name="barcode6" />
+      <label>Bobbin 6 - Berat:</label>
+      <input type="number" name="berat6" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 7 - Barcode:</label>
+      <input type="text" name="barcode7" />
+      <label>Bobbin 7 - Berat:</label>
+      <input type="number" name="berat7" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 8 - Barcode:</label>
+      <input type="text" name="barcode8" />
+      <label>Bobbin 8 - Berat:</label>
+      <input type="number" name="berat8" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 9 - Barcode:</label>
+      <input type="text" name="barcode9" />
+      <label>Bobbin 9 - Berat:</label>
+      <input type="number" name="berat9" inputmode="numeric" />
+    </div>
+
+    <div class="bobbin-group">
+      <label>Bobbin 10 - Barcode:</label>
+      <input type="text" name="barcode10" />
+      <label>Bobbin 10 - Berat:</label>
+      <input type="number" name="berat10" inputmode="numeric" />
+    </div>
+
+    <button type="submit">Kirim</button>
   </form>
-
-  <p id="status"></p>
-
-  <script>
-    const jumlahSelect = document.getElementById("jumlah");
-    const container = document.getElementById("bobbin-container");
-    const status = document.getElementById("status");
-    const url = "https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec";
-
-    jumlahSelect.addEventListener("change", () => {
-      container.innerHTML = "";
-      const jumlah = parseInt(jumlahSelect.value);
-      for (let i = 0; i < jumlah; i++) {
-        const div = document.createElement("div");
-        div.className = "bobbin-group";
-        div.innerHTML = `
-          <h4>Bobbin ${i + 1}</h4>
-          <label>Barcode:</label>
-          <input type="text" name="barcode" required />
-
-          <label>Berat:</label>
-          <input type="number" name="berat" required inputmode="numeric" />
-        `;
-        container.appendChild(div);
-      }
-    });
-
-    document.getElementById("form-massal").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const nama = document.getElementById("nama").value;
-      const tanggal = document.getElementById("tanggal").value;
-      const issue = document.getElementById("issue").value;
-      const ncm = document.getElementById("ncm").value;
-
-      const groups = document.querySelectorAll(".bobbin-group");
-      const data = [];
-
-      groups.forEach(group => {
-        const row = {
-          nama: nama,
-          tanggal: tanggal,
-          issue: issue,
-          ncm: ncm,
-          barcode: group.querySelector("input[name='barcode']").value,
-          berat: group.querySelector("input[name='berat']").value,
-        };
-        data.push(row);
-      });
-
-      fetch(url, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      })
-        .then((res) => res.text())
-        .then((res) => {
-          status.innerText = "✅ Data berhasil dikirim!";
-          document.getElementById("form-massal").reset();
-          container.innerHTML = "";
-        })
-        .catch((err) => {
-          status.innerText = "❌ Gagal mengirim data.";
-          console.error("Error:", err);
-        });
-    });
-  </script>
 </body>
-
 </html>
