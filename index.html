@@ -8,32 +8,13 @@
       body {
         font-family: Arial, sans-serif;
         padding: 10px;
-        max-width: 800px;
+        max-width: 500px;
         margin: auto;
       }
-      .video-wrapper {
-        position: relative;
+      video {
+        border: 1px solid black;
         width: 100%;
         max-width: 400px;
-        margin: auto;
-      }
-      .video-wrapper video {
-        width: 100%;
-        height: auto;
-        display: block;
-        border: 1px solid black;
-      }
-      .frame-box {
-        position: absolute;
-        top: 30%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 70%;
-        height: 30%;
-        border: 2px dashed red;
-        box-sizing: border-box;
-        z-index: 2;
-        pointer-events: none;
       }
       input, button, select {
         width: 100%;
@@ -44,185 +25,92 @@
       label {
         font-weight: bold;
       }
-      .error {
-        color: red;
-        margin-bottom: 10px;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-      }
-      th, td {
-        border: 1px solid #ccc;
-        padding: 8px;
-        text-align: left;
-      }
-      th {
-        background-color: #f0f0f0;
-      }
-      small {
-        display: block;
-        margin-top: -8px;
-        margin-bottom: 8px;
-        color: #555;
+      #scanner-frame {
+        position: absolute;
+        border: 2px dashed red;
+        width: 80%;
+        height: 40%;
+        top: 25%;
+        left: 10%;
+        pointer-events: none;
+        box-sizing: border-box;
       }
     </style>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
   </head>
   <body>
-    <h2 id="title">Scan Barcode GS1-128</h2>
-    <div class="video-wrapper" id="scanner-wrapper">
+    <h2>Scan Barcode GS1-128</h2>
+    <div style="position: relative;">
       <video id="video" autoplay></video>
-      <div class="frame-box"></div>
+      <div id="scanner-frame"></div>
     </div>
 
-    <label for="camera-select" id="camera-label">Pilih Kamera:</label>
-    <select id="camera-select"></select>
-
-    <form
-      id="barcode-form"
-      action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec"
-      method="POST"
-      onsubmit="return validateForm();"
-    >
-      <div id="error" class="error"></div>
-
+    <form action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec" method="POST">
       <label>Barcode:</label>
       <input type="text" id="barcode" name="barcode" required />
-      <small>Jika barcode tidak terbaca otomatis, isi manual di sini.</small>
-      <button type="button" onclick="document.getElementById('barcode').value = ''">Kosongkan Barcode</button>
+
+      <label>SKU (isi jika manual):</label>
+      <input type="text" id="sku" name="sku" disabled />
 
       <label>Nama:</label>
-      <input type="text" id="nama" name="nama" required />
+      <input type="text" name="nama" required />
 
       <label>Berat:</label>
-      <input type="number" name="berat" id="berat" required />
+      <input type="number" name="berat" required />
 
       <label>Issue:</label>
-      <input type="text" name="issue" id="issue" required />
+      <input type="text" name="issue" required />
 
       <label>NCM:</label>
-      <input type="text" name="ncm" id="ncm" required />
+      <input type="text" name="ncm" required />
 
       <button type="submit">Kirim</button>
     </form>
 
-    <div id="admin-table"></div>
-
     <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const isAdmin = urlParams.get("mode") === "admin";
+      const codeReader = new ZXing.BrowserMultiFormatReader();
       const videoElement = document.getElementById("video");
-      const selectElement = document.getElementById("camera-select");
-      const scannerWrapper = document.getElementById("scanner-wrapper");
-      const barcodeForm = document.getElementById("barcode-form");
-      const cameraLabel = document.getElementById("camera-label");
-      let currentDeviceId = null;
+      const barcodeInput = document.getElementById("barcode");
+      const skuInput = document.getElementById("sku");
 
-      if (isAdmin) {
-        document.getElementById("title").innerText = "Mode Admin - Data Terkirim";
-        scannerWrapper.style.display = "none";
-        barcodeForm.style.display = "none";
-        selectElement.style.display = "none";
-        cameraLabel.style.display = "none";
-        fetchSheetData();
-      } else {
-        const codeReader = new ZXing.BrowserMultiFormatReader();
-        codeReader
-          .listVideoInputDevices()
-          .then((devices) => {
-            if (devices.length === 0) {
-              alert("❌ Tidak ada kamera ditemukan.");
-              return;
+      // Kamera dengan auto focus & zoom
+      codeReader.listVideoInputDevices().then((devices) => {
+        if (devices.length > 0) {
+          const deviceId = devices[0].deviceId;
+          navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: { exact: deviceId },
+              facingMode: "environment",
+              advanced: [{ zoom: 2 }]
             }
-
-            devices.forEach((device) => {
-              const option = document.createElement("option");
-              option.value = device.deviceId;
-              option.text = device.label || `Kamera ${selectElement.length + 1}`;
-              selectElement.appendChild(option);
+          })
+          .then((stream) => {
+            videoElement.srcObject = stream;
+            codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
+              if (result) {
+                barcodeInput.value = result.text;
+                skuInput.disabled = true; // disable kolom SKU jika hasil dari scan
+                const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+                beep.play();
+              }
             });
-
-            currentDeviceId = devices.find(d => d.label.toLowerCase().includes("back"))?.deviceId || devices[0].deviceId;
-            selectElement.value = currentDeviceId;
-            startScanner(currentDeviceId);
-
-            selectElement.addEventListener("change", () => {
-              codeReader.reset();
-              currentDeviceId = selectElement.value;
-              startScanner(currentDeviceId);
-            });
-
-            function startScanner(deviceId) {
-navigator.mediaDevices.getUserMedia({
-  video: {
-    deviceId: { exact: deviceId },
-    facingMode: "environment",
-    focusMode: "continuous", // optional, hanya preferensi
-    advanced: [{ zoom: 2 }] // preferensi zoom jika didukung
-  }
-})
-.then((stream) => {
-  videoElement.srcObject = stream;
-  codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
-    if (result) {
-      document.getElementById("barcode").value = result.text;
-      const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-      beep.play();
-    }
-  });
-})
-.catch((err) => {
-  alert("❌ Gagal akses kamera dengan preferensi fokus: " + err.message);
-});
-
-      }
-
-      function validateForm() {
-        const barcode = document.getElementById("barcode").value.trim();
-        const nama = document.getElementById("nama").value.trim();
-        const berat = document.getElementById("berat").value.trim();
-        const issue = document.getElementById("issue").value.trim();
-        const ncm = document.getElementById("ncm").value.trim();
-        const errorDiv = document.getElementById("error");
-
-        if (!barcode || !nama || !berat || !issue || !ncm) {
-          errorDiv.innerText = "❌ Semua field harus diisi sebelum mengirim.";
-          return false;
-        }
-
-        errorDiv.innerText = "";
-        return true;
-      }
-
-      function fetchSheetData() {
-        fetch("https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec")
-          .then((res) => res.json())
-          .then((rows) => {
-            const table = document.createElement("table");
-            const thead = document.createElement("thead");
-            thead.innerHTML = `<tr><th>Waktu</th><th>Barcode</th><th>Nama</th><th>Berat</th><th>Issue</th><th>NCM</th></tr>`;
-            const tbody = document.createElement("tbody");
-
-            rows.forEach((row) => {
-              const tr = document.createElement("tr");
-              row.forEach((cell) => {
-                const td = document.createElement("td");
-                td.textContent = cell;
-                tr.appendChild(td);
-              });
-              tbody.appendChild(tr);
-            });
-
-            table.appendChild(thead);
-            table.appendChild(tbody);
-            document.getElementById("admin-table").appendChild(table);
           })
           .catch((err) => {
-            document.getElementById("admin-table").innerText = "❌ Gagal memuat data.";
+            alert("❌ Gagal akses kamera: " + err.message);
           });
-      }
+        } else {
+          alert("❌ Kamera tidak ditemukan.");
+        }
+      });
+
+      // Enable kolom SKU jika barcode ditulis manual
+      barcodeInput.addEventListener("input", () => {
+        if (barcodeInput.value.length === 0) {
+          skuInput.disabled = true;
+        } else {
+          skuInput.disabled = !barcodeInput.readOnly;
+        }
+      });
     </script>
   </body>
 </html>
