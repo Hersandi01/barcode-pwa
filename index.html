@@ -10,11 +10,24 @@
         padding: 10px;
         max-width: 500px;
         margin: auto;
+        position: relative;
       }
       video {
         border: 1px solid black;
         width: 100%;
         max-width: 400px;
+      }
+      .frame-box {
+        position: absolute;
+        top: 45px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 250px;
+        height: 100px;
+        border: 2px dashed red;
+        box-sizing: border-box;
+        z-index: 2;
+        pointer-events: none;
       }
       input, button {
         width: 100%;
@@ -34,6 +47,7 @@
   </head>
   <body>
     <h2>Scan Barcode GS1-128</h2>
+    <div class="frame-box"></div>
     <video id="video" autoplay></video>
 
     <form
@@ -50,13 +64,13 @@
       <input type="text" id="nama" name="nama" required />
 
       <label>Berat:</label>
-      <input type="number" id="berat" name="berat" required />
+      <input type="number" name="berat" id="berat" required />
 
       <label>Issue:</label>
-      <input type="text" id="issue" name="issue" required />
+      <input type="text" name="issue" id="issue" required />
 
       <label>NCM:</label>
-      <input type="text" id="ncm" name="ncm" required />
+      <input type="text" name="ncm" id="ncm" required />
 
       <button type="submit">Kirim</button>
     </form>
@@ -68,4 +82,39 @@
       codeReader
         .listVideoInputDevices()
         .then((devices) => {
-          const backCam = devices.find(device => device.label.toLo
+          const backCam = devices.find(device => device.label.toLowerCase().includes('back')) || devices[0];
+          if (devices.length > 0) {
+            codeReader.decodeFromVideoDevice(backCam.deviceId, videoElement, (result, err) => {
+              if (result) {
+                document.getElementById("barcode").value = result.text;
+                const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+                beep.play();
+              }
+            });
+          } else {
+            alert("❌ Tidak ada kamera ditemukan.");
+          }
+        })
+        .catch((err) => {
+          alert("❌ Gagal akses kamera: " + err);
+        });
+
+      function validateForm() {
+        const barcode = document.getElementById("barcode").value.trim();
+        const nama = document.getElementById("nama").value.trim();
+        const berat = document.getElementById("berat").value.trim();
+        const issue = document.getElementById("issue").value.trim();
+        const ncm = document.getElementById("ncm").value.trim();
+        const errorDiv = document.getElementById("error");
+
+        if (!barcode || !nama || !berat || !issue || !ncm) {
+          errorDiv.innerText = "❌ Semua field harus diisi sebelum mengirim.";
+          return false;
+        }
+
+        errorDiv.innerText = "";
+        return true;
+      }
+    </script>
+  </body>
+</html>
