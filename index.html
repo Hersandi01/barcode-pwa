@@ -16,7 +16,17 @@
         width: 100%;
         max-width: 400px;
       }
-      input, button, select {
+      .scanner-frame {
+        position: absolute;
+        top: 10%;
+        left: 10%;
+        width: 80%;
+        height: 30%;
+        border: 2px dashed red;
+        box-sizing: border-box;
+        pointer-events: none;
+      }
+      input, select, button {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
@@ -25,31 +35,29 @@
       label {
         font-weight: bold;
       }
-      #scanner-frame {
-        position: absolute;
-        border: 2px dashed red;
-        width: 80%;
-        height: 40%;
-        top: 25%;
-        left: 10%;
-        pointer-events: none;
-        box-sizing: border-box;
-      }
     </style>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
   </head>
   <body>
     <h2>Scan Barcode GS1-128</h2>
+    <label for="cameraSelect">Pilih Kamera:</label>
+    <select id="cameraSelect"></select>
     <div style="position: relative;">
       <video id="video" autoplay></video>
-      <div id="scanner-frame"></div>
+      <div class="scanner-frame"></div>
     </div>
+
+    <label for="modeSelect">Mode Input:</label>
+    <select id="modeSelect">
+      <option value="scan">Scan Barcode</option>
+      <option value="manual">Input Manual</option>
+    </select>
 
     <form action="https://script.google.com/macros/s/AKfycbyuRpLVKpKB-kprbmNiZdJFujo4kxzXJbrR2sfL90y85zff01EcVhJ6Wol_Yj-6LXQU/exec" method="POST">
       <label>Barcode:</label>
-      <input type="text" id="barcode" name="barcode" required />
+      <input type="text" id="barcode" name="barcode" readonly required />
 
-      <label>SKU (isi jika manual):</label>
+      <label>SKU:</label>
       <input type="text" id="sku" name="sku" disabled />
 
       <label>Nama:</label>
@@ -67,50 +75,53 @@
       <button type="submit">Kirim</button>
     </form>
 
+    <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
     <script>
       const codeReader = new ZXing.BrowserMultiFormatReader();
       const videoElement = document.getElementById("video");
+      const cameraSelect = document.getElementById("cameraSelect");
+      const beepSound = document.getElementById("beep");
+      const modeSelect = document.getElementById("modeSelect");
       const barcodeInput = document.getElementById("barcode");
       const skuInput = document.getElementById("sku");
 
-      // Kamera dengan auto focus & zoom
-      codeReader.listVideoInputDevices().then((devices) => {
-        if (devices.length > 0) {
-          const deviceId = devices[0].deviceId;
-          navigator.mediaDevices.getUserMedia({
-            video: {
-              deviceId: { exact: deviceId },
-              facingMode: "environment",
-              advanced: [{ zoom: 2 }]
-            }
-          })
-          .then((stream) => {
-            videoElement.srcObject = stream;
-            codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
-              if (result) {
-                barcodeInput.value = result.text;
-                skuInput.disabled = true; // disable kolom SKU jika hasil dari scan
-                const beep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-                beep.play();
-              }
-            });
-          })
-          .catch((err) => {
-            alert("❌ Gagal akses kamera: " + err.message);
-          });
-        } else {
-          alert("❌ Kamera tidak ditemukan.");
+      modeSelect.addEventListener("change", function () {
+        const manual = this.value === "manual";
+        barcodeInput.readOnly = !manual;
+        skuInput.disabled = !manual;
+        if (!manual) {
+          skuInput.value = "";
         }
       });
 
-      // Enable kolom SKU jika barcode ditulis manual
-      barcodeInput.addEventListener("input", () => {
-        if (barcodeInput.value.length === 0) {
-          skuInput.disabled = true;
-        } else {
-          skuInput.disabled = !barcodeInput.readOnly;
+      codeReader.listVideoInputDevices().then((devices) => {
+        devices.forEach((device) => {
+          const option = document.createElement("option");
+          option.value = device.deviceId;
+          option.text = device.label || `Kamera ${cameraSelect.length + 1}`;
+          cameraSelect.appendChild(option);
+        });
+
+        if (devices.length > 0) {
+          startCamera(devices[0].deviceId);
         }
       });
+
+      cameraSelect.addEventListener("change", function () {
+        startCamera(this.value);
+      });
+
+      function startCamera(deviceId) {
+        codeReader.reset();
+        codeReader.decodeFromVideoDevice(deviceId, videoElement, (result, err) => {
+          if (result) {
+            barcodeInput.value = result.text;
+            beepSound.play();
+            skuInput.value = "";
+          }
+        });
+      }
     </script>
   </body>
 </html>
