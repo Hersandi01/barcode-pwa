@@ -7,25 +7,26 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        padding: 15px;
-        max-width: 480px;
+        padding: 10px;
+        max-width: 500px;
         margin: auto;
       }
       video {
+        border: 1px solid black;
         width: 100%;
-        border: 1px solid #000;
+        max-width: 400px;
       }
       input, button {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
         margin-bottom: 10px;
-        font-size: 1em;
       }
       label {
         font-weight: bold;
       }
     </style>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
   </head>
   <body>
     <h2>Scan Barcode GS1-128</h2>
@@ -36,7 +37,7 @@
       method="POST"
     >
       <label>Barcode:</label>
-      <input type="text" id="barcode" name="barcode" readonly />
+      <input type="text" id="barcode" name="barcode" readonly required />
 
       <label>Nama:</label>
       <input type="text" name="nama" required />
@@ -53,7 +54,6 @@
       <button type="submit">Kirim</button>
     </form>
 
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script>
       const codeReader = new ZXing.BrowserMultiFormatReader();
       const videoElement = document.getElementById("video");
@@ -62,22 +62,13 @@
         .listVideoInputDevices()
         .then((devices) => {
           if (devices.length > 0) {
-            codeReader.decodeFromVideoDevice(
-              devices[0].deviceId,
-              videoElement,
-              (result, err) => {
-                if (result) {
-                  document.getElementById("barcode").value = result.text;
-                }
+            codeReader.decodeFromVideoDevice(devices[0].deviceId, videoElement, (result, err) => {
+              if (result) {
+                document.getElementById("barcode").value = result.text;
               }
-            );
+            });
           } else {
             alert("❌ Tidak ada kamera ditemukan.");
           }
         })
         .catch((err) => {
-          alert("❌ Gagal akses kamera: " + err);
-        });
-    </script>
-  </body>
-</html>
