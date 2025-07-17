@@ -24,7 +24,9 @@
     <label for="jumlahBobbin">Jumlah Bobbin:</label>
     <select id="jumlahBobbin">
       <option value="">Pilih...</option>
-      ${[...Array(10).keys()].map(i => `<option value="${i+1}">${i+1}</option>`).join('')}
+      <script>
+        document.write([...Array(10).keys()].map(i => `<option value="${i+1}">${i+1}</option>`).join(''));
+      </script>
     </select>
   </div>
 
@@ -90,8 +92,47 @@
       formContainer.innerHTML = html;
     }
 
-    function kirimData() {
-      alert('Data akan dikirim... (simulasi)');
+    async function kirimData() {
+      const mode = modeSelect.value;
+      const nama = document.getElementById('nama').value;
+      const issue = document.getElementById('issue').value;
+      const ncm = document.getElementById('ncm').value;
+      const tanggal = document.getElementById('tanggal').value;
+      let data = [];
+
+      if (mode === 'single') {
+        data.push({
+          tanggal,
+          nama,
+          issue,
+          ncm,
+          barcode: document.getElementById('barcode').value,
+          berat: document.getElementById('berat').value
+        });
+      } else {
+        const jumlah = parseInt(jumlahBobbinSelect.value);
+        for (let i = 1; i <= jumlah; i++) {
+          data.push({
+            tanggal,
+            nama,
+            issue,
+            ncm,
+            barcode: document.getElementById(`barcode${i}`).value,
+            berat: document.getElementById(`berat${i}`).value
+          });
+        }
+      }
+
+      try {
+        await fetch("https://script.google.com/macros/s/AKfycbzsGLwFyAjQO3IKP4SUk5HVAPndXFWzbV6OAv4BjmRWfd1LmRD6D7aP-_HBS2Vm5ZDcyA/exec", {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: { "Content-Type": "application/json" }
+        });
+        alert("Data berhasil dikirim!");
+      } catch (error) {
+        alert("Gagal mengirim data: " + error.message);
+      }
     }
 
     // Default mode saat halaman dimuat
