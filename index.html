@@ -3,127 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Input Massal Barcode (Zebra Mode)</title>
+  <title>Input Barcode Zebra Scanner</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 10px;
-      max-width: 600px;
+      padding: 20px;
+      max-width: 500px;
       margin: auto;
     }
-
-    label, input, button {
-      display: block;
+    input, button {
       width: 100%;
-      margin-bottom: 10px;
       padding: 8px;
-      font-size: 16px;
-    }
-
-    .bobbin-group {
-      border: 1px solid #ccc;
-      padding: 10px;
       margin-bottom: 10px;
     }
-
-    .section-title {
+    label {
       font-weight: bold;
-      margin-top: 20px;
     }
+    #sku { background-color: #f0f0f0; }
   </style>
 </head>
 <body>
-  <h2>Input Massal Barcode (Zebra Scanner)</h2>
+  <h2>Input Barcode</h2>
+  
+  <form id="form-barcode">
+    <label for="barcode">Barcode:</label>
+    <input type="text" id="barcode" name="barcode" autofocus />
 
-  <form action="https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec" method="POST">
-    
-    <div class="section-title">Informasi Umum</div>
-    <label>Nama:</label>
-    <input type="text" name="nama" required />
+    <label for="sku">SKU (jika barcode kosong):</label>
+    <input type="text" id="sku" name="sku" disabled />
 
-    <label>Tanggal:</label>
-    <input type="date" name="tanggal" required />
+    <label for="nama">Nama:</label>
+    <input type="text" id="nama" name="nama" required />
 
-    <label>Issue:</label>
-    <input type="text" name="issue" required />
+    <label for="berat">Berat:</label>
+    <input type="number" id="berat" name="berat" inputmode="numeric" required />
 
-    <label>NCM:</label>
-    <input type="text" name="ncm" required />
+    <label for="issue">Issue:</label>
+    <input type="text" id="issue" name="issue" required />
 
-    <div class="section-title">Detail Bobbin (Maks 10)</div>
-
-    <!-- 10 bobbin input -->
-    <div class="bobbin-group">
-      <label>Bobbin 1 - Barcode:</label>
-      <input type="text" name="barcode1" />
-      <label>Bobbin 1 - Berat:</label>
-      <input type="number" name="berat1" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 2 - Barcode:</label>
-      <input type="text" name="barcode2" />
-      <label>Bobbin 2 - Berat:</label>
-      <input type="number" name="berat2" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 3 - Barcode:</label>
-      <input type="text" name="barcode3" />
-      <label>Bobbin 3 - Berat:</label>
-      <input type="number" name="berat3" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 4 - Barcode:</label>
-      <input type="text" name="barcode4" />
-      <label>Bobbin 4 - Berat:</label>
-      <input type="number" name="berat4" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 5 - Barcode:</label>
-      <input type="text" name="barcode5" />
-      <label>Bobbin 5 - Berat:</label>
-      <input type="number" name="berat5" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 6 - Barcode:</label>
-      <input type="text" name="barcode6" />
-      <label>Bobbin 6 - Berat:</label>
-      <input type="number" name="berat6" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 7 - Barcode:</label>
-      <input type="text" name="barcode7" />
-      <label>Bobbin 7 - Berat:</label>
-      <input type="number" name="berat7" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 8 - Barcode:</label>
-      <input type="text" name="barcode8" />
-      <label>Bobbin 8 - Berat:</label>
-      <input type="number" name="berat8" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 9 - Barcode:</label>
-      <input type="text" name="barcode9" />
-      <label>Bobbin 9 - Berat:</label>
-      <input type="number" name="berat9" inputmode="numeric" />
-    </div>
-
-    <div class="bobbin-group">
-      <label>Bobbin 10 - Barcode:</label>
-      <input type="text" name="barcode10" />
-      <label>Bobbin 10 - Berat:</label>
-      <input type="number" name="berat10" inputmode="numeric" />
-    </div>
+    <label for="ncm">NCM:</label>
+    <input type="text" id="ncm" name="ncm" required />
 
     <button type="submit">Kirim</button>
   </form>
+
+  <p id="status"></p>
+  <audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
+
+  <script>
+    const form = document.getElementById("form-barcode");
+    const barcodeInput = document.getElementById("barcode");
+    const skuInput = document.getElementById("sku");
+    const beepSound = document.getElementById("beep");
+    const status = document.getElementById("status");
+
+    const sheetURL = "https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec";
+
+    // Fokus ulang ke barcode setelah load
+    window.onload = () => barcodeInput.focus();
+
+    // Suara dan SKU toggle
+    barcodeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (barcodeInput.value.trim() === "") {
+          skuInput.disabled = false;
+          skuInput.focus();
+        } else {
+          skuInput.disabled = true;
+          beepSound.play();
+        }
+      }
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const data = {
+        barcode: barcodeInput.value.trim() || skuInput.value.trim(),
+        nama: document.getElementById("nama").value,
+        berat: document.getElementById("berat").value,
+        issue: document.getElementById("issue").value,
+        ncm: document.getElementById("ncm").value,
+      };
+
+      fetch(sheetURL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => res.text())
+        .then(() => {
+          status.textContent = "✅ Data berhasil dikirim.";
+          form.reset();
+          barcodeInput.focus();
+          skuInput.disabled = true;
+        })
+        .catch(() => {
+          status.textContent = "❌ Gagal mengirim data.";
+        });
+    });
+  </script>
 </body>
 </html>
