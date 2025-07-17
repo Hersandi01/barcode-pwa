@@ -139,16 +139,23 @@
       }
 
       try {
-        await fetch("https://script.google.com/macros/s/AKfycbzsGLwFyAjQO3IKP4SUk5HVAPndXFWzbV6OAv4BjmRWfd1LmRD6D7aP-_HBS2Vm5ZDcyA/exec", {
-          method: "POST",
-          body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" }
-        });
-        alert("✅ Data berhasil dikirim!");
-      } catch (error) {
-        alert("❌ Gagal mengirim data: " + error.message);
-      }
-    }
+fetch("https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(data)
+})
+  .then(response => response.text())
+  .then(text => {
+    console.log("Response:", text);
+    alert("✅ Data berhasil dikirim!");
+  })
+  .catch(error => {
+    console.error("❌ Gagal mengirim data:", error);
+    alert("❌ Gagal mengirim data. Lihat konsol untuk detail.");
+  });
+
 
     renderSingleForm();
   </script>
