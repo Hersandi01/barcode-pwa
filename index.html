@@ -42,10 +42,6 @@
   <body>
     <h2>Scan Barcode GS1-128</h2>
 
-    <label for="cameraSelect">Pilih Kamera:</label>
-    <select id="cameraSelect"></select>
-    <div class="note">Preferensi: gunakan kamera dengan Auto Focus & Zoom (biasanya "facing back")</div>
-
     <label for="modeSelect">Mode Input:</label>
     <select id="modeSelect">
       <option value="scan">Scan Barcode</option>
@@ -83,40 +79,31 @@
       const barcodeInput = document.getElementById("barcode");
       const skuInput = document.getElementById("sku");
       const modeSelect = document.getElementById("modeSelect");
-      const cameraSelect = document.getElementById("cameraSelect");
       const beep = document.getElementById("beep");
       let html5QrCode = new Html5Qrcode("reader");
-      let currentCameraId = null;
 
-      function startScanner(cameraId) {
-        const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 100 },
-          focusMode: "continuous",
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true,
-          },
-          rememberLastUsedCamera: true,
-        };
+      function startScanner() {
+        Html5Qrcode.getCameras().then(devices => {
+          if (devices.length > 0) {
+            const backCamera = devices.find(device => device.label.toLowerCase().includes("back")) || devices[0];
 
-        html5QrCode
-          .start(cameraId, config, onScanSuccess)
-          .then(() => {
-            currentCameraId = cameraId;
-          })
-          .catch(err => {
-            document.getElementById("reader").innerHTML = `<div style="color:red">Gagal memulai kamera: ${err}</div>`;
-            console.error("Start scanner failed:", err);
-          });
-      }
+            const config = {
+              fps: 10,
+              qrbox: { width: 250, height: 100 },
+              focusMode: "continuous",
+              experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true,
+              },
+              rememberLastUsedCamera: true,
+            };
 
-      function stopScanner() {
-        if (html5QrCode && html5QrCode._isScanning) {
-          return html5QrCode.stop().then(() => {
-            document.getElementById("reader").innerHTML = "";
-          });
-        }
-        return Promise.resolve();
+            html5QrCode
+              .start(backCamera.id, config, onScanSuccess)
+              .catch(err => {
+                document.getElementById("reader").innerHTML = `<div style="color:red">Gagal memulai kamera: ${err}</div>`;
+              });
+          }
+        });
       }
 
       function onScanSuccess(decodedText) {
@@ -124,30 +111,6 @@
         skuInput.value = "";
         beep.play();
       }
-
-      function initCameraOptions() {
-        Html5Qrcode.getCameras().then(devices => {
-          cameraSelect.innerHTML = "";
-          devices.forEach((device, index) => {
-            const option = document.createElement("option");
-            option.value = device.id;
-            option.text = device.label || `Camera ${index + 1}`;
-            cameraSelect.appendChild(option);
-          });
-
-          if (devices.length > 0) {
-            currentCameraId = devices[0].id;
-            cameraSelect.value = currentCameraId;
-            startScanner(currentCameraId);
-          }
-        });
-      }
-
-      cameraSelect.addEventListener("change", function () {
-        stopScanner().then(() => {
-          startScanner(this.value);
-        });
-      });
 
       modeSelect.addEventListener("change", function () {
         const manual = this.value === "manual";
@@ -159,7 +122,7 @@
         }
       });
 
-      window.addEventListener("load", initCameraOptions);
+      window.addEventListener("load", startScanner);
     </script>
   </body>
 </html>
