@@ -34,6 +34,10 @@
     .status {
       font-size: 0.9em;
     }
+    #notif {
+      margin-top: 10px;
+      font-weight: bold;
+    }
     label, legend {
       font-weight: bold;
     }
@@ -102,6 +106,7 @@
 
     <button type="submit" class="submit-btn">Submit</button>
     <button type="button" class="reset-btn" onclick="handleReset()">Reset</button>
+    <div id="notif"></div>
   </form>
 
   <script>
@@ -110,6 +115,7 @@
     const jumlah = document.getElementById('jumlah');
     const statusEl = document.getElementById('status-indicator');
     const toggleTheme = document.getElementById('theme-toggle');
+    const notif = document.getElementById('notif');
 
     function generateBobbinFields(count) {
       bobbinFields.innerHTML = '';
@@ -127,6 +133,7 @@
     function handleReset() {
       form.reset();
       generateBobbinFields(1);
+      notif.textContent = '';
     }
 
     jumlah.addEventListener('change', (e) => {
@@ -135,12 +142,15 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const data = new FormData(form);
+      notif.style.color = 'orange';
+      notif.textContent = '⏳ Sedang mengirim data...';
 
+      const data = new FormData(form);
       const requiredFields = ['nama', 'tanggal', 'issue', 'ncm'];
       for (let field of requiredFields) {
         if (!data.get(field)) {
           alert(`Field "${field}" tidak boleh kosong.`);
+          notif.textContent = '';
           return;
         }
       }
@@ -161,7 +171,9 @@
           body: JSON.stringify(payload)
         });
       }
-      alert("Data berhasil dikirim!");
+
+      notif.style.color = 'green';
+      notif.textContent = '✅ Data berhasil dikirim!';
       form.reset();
       generateBobbinFields(1);
     });
