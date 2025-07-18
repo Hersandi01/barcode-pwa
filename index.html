@@ -92,7 +92,7 @@
     <label>Issue: <input type="text" name="issue" required></label><br>
     <input type="hidden" name="ncm" id="ncm-field">
 
-    <label>Jumlah Bobbin:
+    <label>Jumlah Material:
       <select id="jumlah" name="jumlah">
         <option value="1">1</option>
         <option value="2">2</option>
@@ -130,9 +130,9 @@
       for (let i = 1; i <= count; i++) {
         bobbinFields.innerHTML += `
           <fieldset>
-            <legend>Bobbin ${i}</legend>
+            <legend>Material ${i}</legend>
             <label>Barcode: <input type="text" name="barcode${i}" required></label><br>
-            <label>Berat: <input type="number" name="berat${i}" step="any" required></label>
+            <label>QTY (Kg / Pcs / Stick / Bobbin): <input type="number" name="berat${i}" step="any" required></label>
           </fieldset>
         `;
       }
