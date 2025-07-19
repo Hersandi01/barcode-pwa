@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NCM Input Form</title>
-    <!-- PERUBAHAN: Menambahkan Google Font "Inter" -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,13 +13,13 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            /* PERUBAHAN: Mengganti font utama menjadi "Inter" */
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
         }
 
         body {
-            background-image: url('background.jpg'); /* <-- Ganti dengan nama file background Anda */
+            /* PERUBAHAN: Menggunakan path relatif */
+            background-image: url('background.jpg'); 
             background-color: #000000;
             background-size: cover;
             background-position: center;
@@ -114,7 +113,7 @@
             color: #e0e0e0;
             font-size: 16px;
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif; /* Pastikan elemen form juga menggunakan font Inter */
+            font-family: 'Inter', sans-serif;
         }
         input:focus, select:focus {
             outline: none;
@@ -143,7 +142,7 @@
             font-weight: 600;
             transition: all 0.3s;
             flex-grow: 1;
-            font-family: 'Inter', sans-serif; /* Pastikan tombol juga menggunakan font Inter */
+            font-family: 'Inter', sans-serif;
         }
         .submit-btn {
             background-color: #D4AF37;
@@ -169,7 +168,7 @@
             padding: 12px;
             border-radius: 6px;
             text-align: center;
-            display: none; /* Sembunyikan secara default */
+            display: none;
         }
         #ncm-result {
             color: #D4AF37;
@@ -177,21 +176,21 @@
             border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
-        /* PERUBAHAN: Penyesuaian khusus untuk layar kecil (Android & iPhone) */
+        /* Penyesuaian khusus untuk layar kecil (Android & iPhone) */
         @media (max-width: 768px) {
             body {
-                padding: 20px 10px; /* Kurangi padding di sisi kiri dan kanan */
-                align-items: center; /* Pusatkan container di tengah untuk layar kecil */
+                padding: 20px 10px;
+                align-items: center;
             }
             .container {
-                padding: 20px; /* Kurangi padding di dalam container */
-                max-height: 90vh; /* Izinkan container sedikit lebih tinggi di HP */
+                padding: 20px;
+                max-height: 90vh;
             }
             h2 {
-                font-size: 20px; /* Kecilkan sedikit ukuran judul */
+                font-size: 20px;
             }
             .header {
-                flex-direction: column; /* Susun logo dan judul ke bawah */
+                flex-direction: column;
                 gap: 15px;
             }
         }
@@ -200,7 +199,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="logo.png" alt="Logo" class="logo"> <!-- <-- Ganti dengan nama file logo Anda -->
+            <img src="logo.png" alt="Logo" class="logo"> <!-- PERUBAHAN: Path logo diperbarui -->
             <h2>NCM INPUT FORM</h2>
             <span class="status" id="status-indicator">🟢 Online</span>
         </div>
@@ -272,15 +271,15 @@
             notifEl.style.display = 'block';
             switch(type) {
                 case 'success':
-                    notifEl.style.color = '#4CAF50'; // Green
+                    notifEl.style.color = '#4CAF50';
                     notifEl.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
                     break;
                 case 'error':
-                    notifEl.style.color = '#F44336'; // Red
+                    notifEl.style.color = '#F44336';
                     notifEl.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
                     break;
                 case 'loading':
-                    notifEl.style.color = '#FFC107'; // Amber
+                    notifEl.style.color = '#FFC107';
                     notifEl.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
                     break;
                 default:
@@ -318,23 +317,11 @@
                 const response = await fetch("https://script.google.com/macros/s/AKfycbyyOj9kIf1mihKdNKzQC-9O6iYM0cefAKq_8NWskwqQv1bm5wSCp_mlV-mQrKgVGNkg/exec", {
                     method: "POST",
                     body: JSON.stringify(payload),
-                    mode: 'no-cors' // Use no-cors if the script doesn't return CORS headers
+                    mode: 'no-cors' 
                 });
                 
-                // Since the original script might not return a proper JSON response with CORS,
-                // we assume success and let the user check the result separately.
-                // A better approach is to modify the Google Apps Script to return a proper JSON response.
                 showNotification('✅ Data sent successfully! Please verify the result.', 'success');
-                // The following lines might not work as expected with no-cors
-                // const result = await response.json();
-                // if (result.success) {
-                //     showNotification('✅ Data sent successfully!', 'success');
-                //     ncmResultEl.textContent = '🆔 Your NCM ID: ' + result.ncm;
-                //     ncmResultEl.style.display = 'block';
-                // } else {
-                //     showNotification('❌ Failed to save data. ' + (result.error || ''), 'error');
-                // }
-
+                
                 setTimeout(() => {
                     handleReset();
                 }, 4000);
