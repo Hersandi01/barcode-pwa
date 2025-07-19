@@ -176,6 +176,25 @@
             background-color: rgba(212, 175, 55, 0.1);
             border: 1px solid rgba(212, 175, 55, 0.3);
         }
+
+        /* PERUBAHAN: Penyesuaian khusus untuk layar kecil (Android & iPhone) */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px; /* Kurangi padding di sisi kiri dan kanan */
+                align-items: center; /* Pusatkan container di tengah untuk layar kecil */
+            }
+            .container {
+                padding: 20px; /* Kurangi padding di dalam container */
+                max-height: 90vh; /* Izinkan container sedikit lebih tinggi di HP */
+            }
+            h2 {
+                font-size: 20px; /* Kecilkan sedikit ukuran judul */
+            }
+            .header {
+                flex-direction: column; /* Susun logo dan judul ke bawah */
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
